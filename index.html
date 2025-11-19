@@ -316,6 +316,74 @@
             </svg>
         );
 
+        const Settings = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6m0-18a3 3 0 0 0 3 3h4a2 2 0 0 1 2 2v4a3 3 0 0 0 3 3m-18 0a3 3 0 0 0 3-3V8a2 2 0 0 1 2-2h4a3 3 0 0 0 3-3"></path>
+                <path d="M12 1v6m0 6v6"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+            </svg>
+        );
+
+        const Volume2 = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+            </svg>
+        );
+
+        const VolumeX = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                <line x1="23" y1="9" x2="17" y2="15"></line>
+                <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+        );
+
+        const Save = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+            </svg>
+        );
+
+        const Upload = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+        );
+
+        const RefreshCw = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        );
+
+        const Bell = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+        );
+
+        const BellOff = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                <path d="M18.63 13A17.89 17.89 0 0 1 18 8"></path>
+                <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"></path>
+                <path d="M18 8a6 6 0 0 0-9.33-5"></path>
+                <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+        );
+
         const CardFindzTycoon = () => {
             const [theme, setTheme] = useState('dark');
             const [cash, setCash] = useState(0);
@@ -340,8 +408,18 @@
             const [totalGradingGames, setTotalGradingGames] = useState(0);
             const [perfectGrades, setPerfectGrades] = useState(0);
 
+            // Settings states
+            const [showSettings, setShowSettings] = useState(false);
+            const [volume, setVolume] = useState(50);
+            const [soundEnabled, setSoundEnabled] = useState(true);
+            const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+            const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+            const [lastSaveTime, setLastSaveTime] = useState(null);
+
             // Sound effects using Web Audio API
             const playSound = (frequency, duration, type = 'sine') => {
+                if (!soundEnabled) return;
+
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 const oscillator = audioContext.createOscillator();
                 const gainNode = audioContext.createGain();
@@ -352,7 +430,8 @@
                 oscillator.frequency.value = frequency;
                 oscillator.type = type;
 
-                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                const adjustedVolume = (volume / 100) * 0.3;
+                gainNode.gain.setValueAtTime(adjustedVolume, audioContext.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
 
                 oscillator.start(audioContext.currentTime);
@@ -384,6 +463,113 @@
             const toggleTheme = () => {
                 setTheme(prev => prev === 'dark' ? 'light' : 'dark');
             };
+
+            // Save/Load functionality
+            const saveGame = () => {
+                const saveData = {
+                    cash,
+                    totalEarned,
+                    totalClicks,
+                    portfolio: portfolio.map(u => ({ id: u.id, owned: u.owned })),
+                    unlockedAchievements,
+                    theme,
+                    volume,
+                    soundEnabled,
+                    notificationsEnabled,
+                    autoSaveEnabled,
+                    gradingCooldown,
+                    totalGradingGames,
+                    perfectGrades,
+                    timestamp: Date.now()
+                };
+
+                try {
+                    localStorage.setItem('cardFindzSave', JSON.stringify(saveData));
+                    setLastSaveTime(new Date().toLocaleTimeString());
+                    setMessage('✓ Game saved successfully!');
+                    playSuccessSound();
+                    return true;
+                } catch (error) {
+                    setMessage('✗ Failed to save game!');
+                    playFailSound();
+                    return false;
+                }
+            };
+
+            const loadGame = () => {
+                try {
+                    const saveData = localStorage.getItem('cardFindzSave');
+                    if (!saveData) {
+                        setMessage('No save data found!');
+                        return false;
+                    }
+
+                    const data = JSON.parse(saveData);
+                    setCash(data.cash || 0);
+                    setTotalEarned(data.totalEarned || 0);
+                    setTotalClicks(data.totalClicks || 0);
+                    setUnlockedAchievements(data.unlockedAchievements || []);
+                    setTheme(data.theme || 'dark');
+                    setVolume(data.volume !== undefined ? data.volume : 50);
+                    setSoundEnabled(data.soundEnabled !== undefined ? data.soundEnabled : true);
+                    setNotificationsEnabled(data.notificationsEnabled !== undefined ? data.notificationsEnabled : true);
+                    setAutoSaveEnabled(data.autoSaveEnabled !== undefined ? data.autoSaveEnabled : true);
+                    setGradingCooldown(data.gradingCooldown || 0);
+                    setTotalGradingGames(data.totalGradingGames || 0);
+                    setPerfectGrades(data.perfectGrades || 0);
+
+                    if (data.portfolio) {
+                        setPortfolio(prev => prev.map(upgrade => {
+                            const saved = data.portfolio.find(p => p.id === upgrade.id);
+                            return saved ? { ...upgrade, owned: saved.owned } : upgrade;
+                        }));
+                    }
+
+                    const savedTime = new Date(data.timestamp).toLocaleString();
+                    setMessage(`✓ Game loaded from ${savedTime}`);
+                    playSuccessSound();
+                    return true;
+                } catch (error) {
+                    setMessage('✗ Failed to load game!');
+                    playFailSound();
+                    return false;
+                }
+            };
+
+            const resetGame = () => {
+                if (!confirm('Are you sure you want to reset all progress? This cannot be undone!')) {
+                    return;
+                }
+
+                setCash(0);
+                setTotalEarned(0);
+                setTotalClicks(0);
+                setUnlockedAchievements([]);
+                setGradingCooldown(0);
+                setTotalGradingGames(0);
+                setPerfectGrades(0);
+                setPortfolio(upgrades.map(inv => ({ ...inv })));
+                localStorage.removeItem('cardFindzSave');
+                setMessage('Game reset complete!');
+                setShowSettings(false);
+                playSuccessSound();
+            };
+
+            // Load game on mount
+            useEffect(() => {
+                loadGame();
+            }, []);
+
+            // Auto-save every 30 seconds
+            useEffect(() => {
+                if (!autoSaveEnabled) return;
+
+                const autoSaveInterval = setInterval(() => {
+                    saveGame();
+                }, 30000);
+
+                return () => clearInterval(autoSaveInterval);
+            }, [autoSaveEnabled, cash, totalEarned, totalClicks, portfolio, unlockedAchievements, theme, volume, soundEnabled, notificationsEnabled, gradingCooldown, totalGradingGames, perfectGrades]);
 
             // Card grading mini-game functions
             const cardConditions = {
@@ -1143,8 +1329,290 @@
                         </div>
                     )}
 
+                    {/* Settings Modal */}
+                    {showSettings && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}>
+                            <div className="card-corner border-2 rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" style={{
+                                backgroundColor: currentColors.bg,
+                                borderColor: currentColors.accent,
+                                boxShadow: `0 0 50px ${currentColors.accent}60`
+                            }}>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-3xl font-bold flex items-center gap-3">
+                                        <Settings size={32} style={{ color: currentColors.accent }} />
+                                        <span style={{ color: currentColors.text }}>Settings</span>
+                                    </h2>
+                                    <button
+                                        onClick={() => setShowSettings(false)}
+                                        className="text-2xl font-bold px-3 py-1 rounded-lg hover:scale-110 transition-transform"
+                                        style={{
+                                            backgroundColor: currentColors.bgSecondary,
+                                            color: currentColors.textSecondary,
+                                            border: `2px solid ${currentColors.borderLight}`
+                                        }}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                <div className="space-y-6">
+                                    {/* Save/Load Section */}
+                                    <div className="card-corner border rounded-xl p-5" style={{
+                                        backgroundColor: currentColors.bgSecondary,
+                                        borderColor: currentColors.accent
+                                    }}>
+                                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: currentColors.text }}>
+                                            <Save size={24} style={{ color: currentColors.accent }} />
+                                            Save & Load
+                                        </h3>
+
+                                        <div className="space-y-3">
+                                            <div className="flex items-center justify-between p-3 rounded-lg" style={{
+                                                backgroundColor: currentColors.bgTertiary,
+                                                border: `1px solid ${currentColors.borderLight}`
+                                            }}>
+                                                <div>
+                                                    <div className="font-bold text-sm" style={{ color: currentColors.text }}>Auto-Save</div>
+                                                    <div className="text-xs" style={{ color: currentColors.textSecondary }}>Saves every 30 seconds</div>
+                                                    {lastSaveTime && (
+                                                        <div className="text-xs mt-1" style={{ color: currentColors.accent }}>
+                                                            Last saved: {lastSaveTime}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
+                                                    className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                                                        autoSaveEnabled ? 'scale-100' : 'opacity-50'
+                                                    }`}
+                                                    style={{
+                                                        backgroundColor: autoSaveEnabled ? currentColors.accent : currentColors.bgTertiary,
+                                                        color: autoSaveEnabled && theme === 'dark' ? '#000' : currentColors.text,
+                                                        border: `2px solid ${currentColors.accent}`
+                                                    }}
+                                                >
+                                                    {autoSaveEnabled ? 'ON' : 'OFF'}
+                                                </button>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <button
+                                                    onClick={saveGame}
+                                                    className="flex items-center justify-center gap-2 p-3 rounded-lg font-bold hover:scale-105 transition-all"
+                                                    style={{
+                                                        backgroundColor: currentColors.accent,
+                                                        color: theme === 'dark' ? '#000' : '#fff',
+                                                        boxShadow: `0 5px 20px ${currentColors.accent}40`
+                                                    }}
+                                                >
+                                                    <Save size={20} />
+                                                    Save Now
+                                                </button>
+                                                <button
+                                                    onClick={loadGame}
+                                                    className="flex items-center justify-center gap-2 p-3 rounded-lg font-bold hover:scale-105 transition-all"
+                                                    style={{
+                                                        backgroundColor: currentColors.bgTertiary,
+                                                        color: currentColors.text,
+                                                        border: `2px solid ${currentColors.accent}`
+                                                    }}
+                                                >
+                                                    <Upload size={20} />
+                                                    Load Game
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Audio Section */}
+                                    <div className="card-corner border rounded-xl p-5" style={{
+                                        backgroundColor: currentColors.bgSecondary,
+                                        borderColor: currentColors.accent
+                                    }}>
+                                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: currentColors.text }}>
+                                            {soundEnabled ? <Volume2 size={24} style={{ color: currentColors.accent }} /> : <VolumeX size={24} style={{ color: currentColors.accent }} />}
+                                            Audio Settings
+                                        </h3>
+
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between p-3 rounded-lg" style={{
+                                                backgroundColor: currentColors.bgTertiary,
+                                                border: `1px solid ${currentColors.borderLight}`
+                                            }}>
+                                                <div>
+                                                    <div className="font-bold text-sm" style={{ color: currentColors.text }}>Sound Effects</div>
+                                                    <div className="text-xs" style={{ color: currentColors.textSecondary }}>Enable/disable all sounds</div>
+                                                </div>
+                                                <button
+                                                    onClick={() => setSoundEnabled(!soundEnabled)}
+                                                    className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                                                        soundEnabled ? 'scale-100' : 'opacity-50'
+                                                    }`}
+                                                    style={{
+                                                        backgroundColor: soundEnabled ? currentColors.accent : currentColors.bgTertiary,
+                                                        color: soundEnabled && theme === 'dark' ? '#000' : currentColors.text,
+                                                        border: `2px solid ${currentColors.accent}`
+                                                    }}
+                                                >
+                                                    {soundEnabled ? 'ON' : 'OFF'}
+                                                </button>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <div className="font-bold text-sm" style={{ color: currentColors.text }}>
+                                                        Volume: {volume}%
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            playSellSound();
+                                                        }}
+                                                        className="text-xs px-3 py-1 rounded-lg hover:scale-105 transition-all"
+                                                        style={{
+                                                            backgroundColor: currentColors.accent,
+                                                            color: theme === 'dark' ? '#000' : '#fff'
+                                                        }}
+                                                    >
+                                                        Test Sound
+                                                    </button>
+                                                </div>
+                                                <input
+                                                    type="range"
+                                                    min="0"
+                                                    max="100"
+                                                    value={volume}
+                                                    onChange={(e) => setVolume(parseInt(e.target.value))}
+                                                    className="w-full h-3 rounded-lg appearance-none cursor-pointer"
+                                                    style={{
+                                                        backgroundColor: currentColors.bgTertiary,
+                                                        background: `linear-gradient(to right, ${currentColors.accent} 0%, ${currentColors.accent} ${volume}%, ${currentColors.bgTertiary} ${volume}%, ${currentColors.bgTertiary} 100%)`
+                                                    }}
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Notifications Section */}
+                                    <div className="card-corner border rounded-xl p-5" style={{
+                                        backgroundColor: currentColors.bgSecondary,
+                                        borderColor: currentColors.accent
+                                    }}>
+                                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: currentColors.text }}>
+                                            {notificationsEnabled ? <Bell size={24} style={{ color: currentColors.accent }} /> : <BellOff size={24} style={{ color: currentColors.accent }} />}
+                                            Notifications
+                                        </h3>
+
+                                        <div className="flex items-center justify-between p-3 rounded-lg" style={{
+                                            backgroundColor: currentColors.bgTertiary,
+                                            border: `1px solid ${currentColors.borderLight}`
+                                        }}>
+                                            <div>
+                                                <div className="font-bold text-sm" style={{ color: currentColors.text }}>Achievement Notifications</div>
+                                                <div className="text-xs" style={{ color: currentColors.textSecondary }}>Show achievement popups</div>
+                                            </div>
+                                            <button
+                                                onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+                                                className={`px-4 py-2 rounded-lg font-bold transition-all ${
+                                                    notificationsEnabled ? 'scale-100' : 'opacity-50'
+                                                }`}
+                                                style={{
+                                                    backgroundColor: notificationsEnabled ? currentColors.accent : currentColors.bgTertiary,
+                                                    color: notificationsEnabled && theme === 'dark' ? '#000' : currentColors.text,
+                                                    border: `2px solid ${currentColors.accent}`
+                                                }}
+                                            >
+                                                {notificationsEnabled ? 'ON' : 'OFF'}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Game Info Section */}
+                                    <div className="card-corner border rounded-xl p-5" style={{
+                                        backgroundColor: currentColors.bgSecondary,
+                                        borderColor: currentColors.accent
+                                    }}>
+                                        <h3 className="text-xl font-bold mb-4" style={{ color: currentColors.text }}>
+                                            Game Statistics
+                                        </h3>
+
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div className="p-3 rounded-lg" style={{
+                                                backgroundColor: currentColors.bgTertiary,
+                                                border: `1px solid ${currentColors.borderLight}`
+                                            }}>
+                                                <div className="text-xs" style={{ color: currentColors.textSecondary }}>Total Earned</div>
+                                                <div className="font-bold" style={{ color: currentColors.accent }}>{formatMoney(totalEarned)}</div>
+                                            </div>
+                                            <div className="p-3 rounded-lg" style={{
+                                                backgroundColor: currentColors.bgTertiary,
+                                                border: `1px solid ${currentColors.borderLight}`
+                                            }}>
+                                                <div className="text-xs" style={{ color: currentColors.textSecondary }}>Total Clicks</div>
+                                                <div className="font-bold" style={{ color: currentColors.accent }}>{totalClicks.toLocaleString()}</div>
+                                            </div>
+                                            <div className="p-3 rounded-lg" style={{
+                                                backgroundColor: currentColors.bgTertiary,
+                                                border: `1px solid ${currentColors.borderLight}`
+                                            }}>
+                                                <div className="text-xs" style={{ color: currentColors.textSecondary }}>Per Second</div>
+                                                <div className="font-bold" style={{ color: currentColors.accent }}>{formatMoney(cardsPerSecond)}</div>
+                                            </div>
+                                            <div className="p-3 rounded-lg" style={{
+                                                backgroundColor: currentColors.bgTertiary,
+                                                border: `1px solid ${currentColors.borderLight}`
+                                            }}>
+                                                <div className="text-xs" style={{ color: currentColors.textSecondary }}>Achievements</div>
+                                                <div className="font-bold" style={{ color: currentColors.accent }}>{unlockedAchievements.length}/{achievements.length}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Danger Zone */}
+                                    <div className="card-corner border-2 rounded-xl p-5" style={{
+                                        backgroundColor: currentColors.bgSecondary,
+                                        borderColor: '#ef4444'
+                                    }}>
+                                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: '#ef4444' }}>
+                                            <RefreshCw size={24} />
+                                            Danger Zone
+                                        </h3>
+
+                                        <button
+                                            onClick={resetGame}
+                                            className="w-full flex items-center justify-center gap-2 p-3 rounded-lg font-bold hover:scale-105 transition-all"
+                                            style={{
+                                                backgroundColor: '#ef4444',
+                                                color: '#fff',
+                                                boxShadow: '0 5px 20px rgba(239, 68, 68, 0.4)'
+                                            }}
+                                        >
+                                            <RefreshCw size={20} />
+                                            Reset All Progress
+                                        </button>
+                                        <p className="text-xs mt-2 text-center" style={{ color: currentColors.textSecondary }}>
+                                            This will delete all your progress permanently
+                                        </p>
+                                    </div>
+
+                                    {/* Close Button */}
+                                    <button
+                                        onClick={() => setShowSettings(false)}
+                                        className="w-full py-3 rounded-xl font-bold hover:scale-105 transition-all"
+                                        style={{
+                                            backgroundColor: currentColors.accent,
+                                            color: theme === 'dark' ? '#000' : '#fff',
+                                            boxShadow: `0 5px 20px ${currentColors.accent}40`
+                                        }}
+                                    >
+                                        Close Settings
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Achievement Notification */}
-                    {achievementNotification && (
+                    {achievementNotification && notificationsEnabled && (
                         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
                             <div className="card-corner border-2 rounded-xl p-6 shadow-2xl min-w-[320px]" style={{
                                 backgroundColor: currentColors.bgSecondary,
@@ -1181,6 +1649,18 @@
                                     <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: currentColors.textSecondary }}>Total Cash</div>
                                     <div className="text-2xl font-bold" style={{ color: currentColors.accent }}>{formatMoney(cash)}</div>
                                 </div>
+                                <button
+                                    onClick={() => setShowSettings(true)}
+                                    className="p-2 rounded-lg transition-all hover:scale-110"
+                                    style={{
+                                        backgroundColor: currentColors.bgSecondary,
+                                        border: `2px solid ${currentColors.accent}`,
+                                        color: currentColors.accent
+                                    }}
+                                    title="Settings"
+                                >
+                                    <Settings size={20} />
+                                </button>
                                 <button
                                     onClick={toggleTheme}
                                     className="p-2 rounded-lg transition-all hover:scale-110"
