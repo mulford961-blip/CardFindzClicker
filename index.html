@@ -320,6 +320,15 @@
             const [unlockedAchievements, setUnlockedAchievements] = useState([]);
             const [achievementNotification, setAchievementNotification] = useState(null);
 
+            // Mini-game states
+            const [showGradingGame, setShowGradingGame] = useState(false);
+            const [currentCard, setCurrentCard] = useState(null);
+            const [selectedGrade, setSelectedGrade] = useState(null);
+            const [gameResult, setGameResult] = useState(null);
+            const [gradingCooldown, setGradingCooldown] = useState(0);
+            const [totalGradingGames, setTotalGradingGames] = useState(0);
+            const [perfectGrades, setPerfectGrades] = useState(0);
+
             // Sound effects using Web Audio API
             const playSound = (frequency, duration, type = 'sine') => {
                 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -350,9 +359,126 @@
                 setTimeout(() => playSound(783.99, 0.2, 'square'), 200);
             };
 
+            const playSuccessSound = () => {
+                playSound(659.25, 0.1, 'sine');
+                setTimeout(() => playSound(783.99, 0.1, 'sine'), 80);
+                setTimeout(() => playSound(987.77, 0.15, 'sine'), 160);
+            };
+
+            const playFailSound = () => {
+                playSound(400, 0.15, 'square');
+                setTimeout(() => playSound(300, 0.2, 'square'), 100);
+            };
+
             const toggleTheme = () => {
                 setTheme(prev => prev === 'dark' ? 'light' : 'dark');
             };
+
+            // Card grading mini-game functions
+            const cardConditions = {
+                10: { name: 'Gem Mint', corners: 'Perfect sharp corners', edges: 'Pristine edges', centering: 'Perfect 50/50', surface: 'Flawless surface' },
+                9: { name: 'Mint', corners: 'Sharp corners', edges: 'Clean edges', centering: 'Excellent centering', surface: 'Near-perfect surface' },
+                8: { name: 'NM-MT', corners: 'Very minor corner wear', edges: 'Slight edge wear', centering: 'Good centering 60/40', surface: 'Minor surface issues' },
+                7: { name: 'Near Mint', corners: 'Slight corner rounding', edges: 'Minor edge chipping', centering: 'Off-center 70/30', surface: 'Light surface scratches' },
+                6: { name: 'EX-MT', corners: 'Visible corner wear', edges: 'Moderate edge wear', centering: 'Poor centering 75/25', surface: 'Moderate scratches' },
+                5: { name: 'Excellent', corners: 'Rounded corners', edges: 'Heavy edge wear', centering: 'Very off-center 80/20', surface: 'Heavy scratches' },
+                4: { name: 'VG-EX', corners: 'Heavily rounded', edges: 'Significant chipping', centering: 'Badly off-center', surface: 'Multiple defects' },
+                3: { name: 'Very Good', corners: 'Major rounding', edges: 'Extensive wear', centering: 'Extremely off-center', surface: 'Heavy defects' },
+                2: { name: 'Good', corners: 'Severe damage', edges: 'Major damage', centering: 'Terrible centering', surface: 'Severe damage' },
+                1: { name: 'Poor', corners: 'Extreme damage', edges: 'Extreme damage', centering: 'Worst possible', surface: 'Destroyed surface' }
+            };
+
+            const generateRandomCard = () => {
+                const grade = Math.floor(Math.random() * 10) + 1; // 1-10
+                const playerName = ['Michael Jordan', 'LeBron James', 'Tom Brady', 'Wayne Gretzky', 'Babe Ruth', 'Mickey Mantle', 'Ken Griffey Jr.', 'Derek Jeter'][Math.floor(Math.random() * 8)];
+                const year = 1980 + Math.floor(Math.random() * 43); // 1980-2023
+                const cardNumber = Math.floor(Math.random() * 500) + 1;
+
+                return {
+                    grade,
+                    playerName,
+                    year,
+                    cardNumber,
+                    condition: cardConditions[grade]
+                };
+            };
+
+            const startGradingGame = () => {
+                if (gradingCooldown > 0) {
+                    setMessage(`Mini-game available in ${gradingCooldown}s`);
+                    return;
+                }
+
+                const newCard = generateRandomCard();
+                setCurrentCard(newCard);
+                setSelectedGrade(null);
+                setGameResult(null);
+                setShowGradingGame(true);
+            };
+
+            const submitGrade = () => {
+                if (!selectedGrade || !currentCard) return;
+
+                const difference = Math.abs(selectedGrade - currentCard.grade);
+                let reward = 0;
+                let message = '';
+                let isSuccess = false;
+
+                if (difference === 0) {
+                    reward = Math.floor(clickValue * 10);
+                    message = 'Perfect! Exact match!';
+                    isSuccess = true;
+                    setPerfectGrades(prev => prev + 1);
+                    playSuccessSound();
+                } else if (difference === 1) {
+                    reward = Math.floor(clickValue * 5);
+                    message = 'Great! Within 1 grade!';
+                    isSuccess = true;
+                    playSuccessSound();
+                } else if (difference === 2) {
+                    reward = Math.floor(clickValue * 2);
+                    message = 'Good! Within 2 grades!';
+                    isSuccess = true;
+                    playSuccessSound();
+                } else {
+                    reward = 0;
+                    message = 'Too far off. No bonus.';
+                    playFailSound();
+                }
+
+                setCash(prev => prev + reward);
+                setTotalEarned(prev => prev + reward);
+                setTotalGradingGames(prev => prev + 1);
+
+                setGameResult({
+                    correct: currentCard.grade,
+                    selected: selectedGrade,
+                    difference,
+                    reward,
+                    message,
+                    isSuccess
+                });
+
+                // Start cooldown
+                setGradingCooldown(60);
+            };
+
+            const closeGradingGame = () => {
+                setShowGradingGame(false);
+                setCurrentCard(null);
+                setSelectedGrade(null);
+                setGameResult(null);
+            };
+
+            // Cooldown timer
+            useEffect(() => {
+                if (gradingCooldown > 0) {
+                    const timer = setTimeout(() => {
+                        setGradingCooldown(prev => prev - 1);
+                    }, 1000);
+                    return () => clearTimeout(timer);
+                }
+            }, [gradingCooldown]);
 
             // Theme colors - CardFindz branding
             const colors = {
@@ -740,6 +866,193 @@
 
             return (
                 <div className={`min-h-screen ${theme}`} style={{ backgroundColor: currentColors.bg, color: currentColors.text }}>
+                    {/* Card Grading Mini-Game Modal */}
+                    {showGradingGame && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}>
+                            <div className="card-corner border-2 rounded-2xl p-8 max-w-2xl w-full shadow-2xl animate-bounce" style={{
+                                backgroundColor: currentColors.bg,
+                                borderColor: currentColors.accent,
+                                boxShadow: `0 0 50px ${currentColors.accent}60`,
+                                animation: 'none'
+                            }}>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-3xl font-bold flex items-center gap-3">
+                                        <Star size={32} style={{ color: currentColors.accent }} />
+                                        <span style={{ color: currentColors.text }}>Card Grading Challenge</span>
+                                    </h2>
+                                    <button
+                                        onClick={closeGradingGame}
+                                        className="text-2xl font-bold px-3 py-1 rounded-lg hover:scale-110 transition-transform"
+                                        style={{
+                                            backgroundColor: currentColors.bgSecondary,
+                                            color: currentColors.textSecondary,
+                                            border: `2px solid ${currentColors.borderLight}`
+                                        }}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+
+                                {!gameResult ? (
+                                    <>
+                                        {/* Card Display */}
+                                        <div className="card-corner border-2 rounded-xl p-6 mb-6" style={{
+                                            backgroundColor: currentColors.bgSecondary,
+                                            borderColor: currentColors.accent
+                                        }}>
+                                            <div className="text-center mb-4">
+                                                <div className="text-xl font-bold mb-2" style={{ color: currentColors.accent }}>
+                                                    {currentCard?.year} {currentCard?.playerName}
+                                                </div>
+                                                <div className="text-sm" style={{ color: currentColors.textSecondary }}>
+                                                    Card #{currentCard?.cardNumber}
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div className="border rounded-lg p-3" style={{
+                                                    backgroundColor: currentColors.bgTertiary,
+                                                    borderColor: currentColors.borderLight
+                                                }}>
+                                                    <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Corners</div>
+                                                    <div style={{ color: currentColors.text }}>{currentCard?.condition.corners}</div>
+                                                </div>
+                                                <div className="border rounded-lg p-3" style={{
+                                                    backgroundColor: currentColors.bgTertiary,
+                                                    borderColor: currentColors.borderLight
+                                                }}>
+                                                    <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Edges</div>
+                                                    <div style={{ color: currentColors.text }}>{currentCard?.condition.edges}</div>
+                                                </div>
+                                                <div className="border rounded-lg p-3" style={{
+                                                    backgroundColor: currentColors.bgTertiary,
+                                                    borderColor: currentColors.borderLight
+                                                }}>
+                                                    <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Centering</div>
+                                                    <div style={{ color: currentColors.text }}>{currentCard?.condition.centering}</div>
+                                                </div>
+                                                <div className="border rounded-lg p-3" style={{
+                                                    backgroundColor: currentColors.bgTertiary,
+                                                    borderColor: currentColors.borderLight
+                                                }}>
+                                                    <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Surface</div>
+                                                    <div style={{ color: currentColors.text }}>{currentCard?.condition.surface}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Grade Selection */}
+                                        <div className="mb-6">
+                                            <div className="text-lg font-bold mb-3 text-center" style={{ color: currentColors.text }}>
+                                                What grade would you assign?
+                                            </div>
+                                            <div className="grid grid-cols-5 gap-2">
+                                                {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1].map(grade => (
+                                                    <button
+                                                        key={grade}
+                                                        onClick={() => setSelectedGrade(grade)}
+                                                        className={`p-3 rounded-lg border-2 transition-all font-bold ${
+                                                            selectedGrade === grade ? 'scale-110' : 'hover:scale-105'
+                                                        }`}
+                                                        style={{
+                                                            backgroundColor: selectedGrade === grade ? currentColors.accent : currentColors.bgSecondary,
+                                                            borderColor: selectedGrade === grade ? currentColors.accent : currentColors.borderLight,
+                                                            color: selectedGrade === grade && theme === 'dark' ? '#000' : currentColors.text
+                                                        }}
+                                                    >
+                                                        <div className="text-2xl">{grade}</div>
+                                                        <div className="text-xs mt-1" style={{
+                                                            color: selectedGrade === grade && theme === 'dark' ? '#000' : currentColors.textSecondary
+                                                        }}>
+                                                            {cardConditions[grade].name}
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Submit Button */}
+                                        <button
+                                            onClick={submitGrade}
+                                            disabled={!selectedGrade}
+                                            className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+                                                !selectedGrade ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                                            }`}
+                                            style={{
+                                                backgroundColor: currentColors.accent,
+                                                color: theme === 'dark' ? '#000' : '#fff',
+                                                boxShadow: `0 5px 20px ${currentColors.accent}40`
+                                            }}
+                                        >
+                                            Submit Grade
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        {/* Results Display */}
+                                        <div className="text-center mb-6">
+                                            <div className="text-6xl mb-4">
+                                                {gameResult.isSuccess ? '🎉' : '😔'}
+                                            </div>
+                                            <div className="text-3xl font-bold mb-2" style={{
+                                                color: gameResult.isSuccess ? '#22c55e' : '#ef4444'
+                                            }}>
+                                                {gameResult.message}
+                                            </div>
+                                        </div>
+
+                                        <div className="card-corner border-2 rounded-xl p-6 mb-6" style={{
+                                            backgroundColor: currentColors.bgSecondary,
+                                            borderColor: currentColors.accent
+                                        }}>
+                                            <div className="grid grid-cols-2 gap-4 text-center mb-4">
+                                                <div>
+                                                    <div className="text-sm mb-1" style={{ color: currentColors.textSecondary }}>Correct Grade</div>
+                                                    <div className="text-4xl font-bold" style={{ color: currentColors.accent }}>
+                                                        {gameResult.correct}
+                                                    </div>
+                                                    <div className="text-xs mt-1" style={{ color: currentColors.textSecondary }}>
+                                                        {cardConditions[gameResult.correct].name}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm mb-1" style={{ color: currentColors.textSecondary }}>Your Grade</div>
+                                                    <div className="text-4xl font-bold" style={{
+                                                        color: gameResult.isSuccess ? '#22c55e' : '#ef4444'
+                                                    }}>
+                                                        {gameResult.selected}
+                                                    </div>
+                                                    <div className="text-xs mt-1" style={{ color: currentColors.textSecondary }}>
+                                                        {cardConditions[gameResult.selected].name}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="text-center pt-4 border-t" style={{ borderColor: currentColors.borderLight }}>
+                                                <div className="text-sm mb-1" style={{ color: currentColors.textSecondary }}>Bonus Earned</div>
+                                                <div className="text-3xl font-bold" style={{ color: currentColors.accent }}>
+                                                    {formatMoney(gameResult.reward)}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={closeGradingGame}
+                                            className="w-full py-4 rounded-xl font-bold text-xl hover:scale-105 transition-all"
+                                            style={{
+                                                backgroundColor: currentColors.accent,
+                                                color: theme === 'dark' ? '#000' : '#fff',
+                                                boxShadow: `0 5px 20px ${currentColors.accent}40`
+                                            }}
+                                        >
+                                            Continue Playing
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Achievement Notification */}
                     {achievementNotification && (
                         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
@@ -887,6 +1200,28 @@
                                     ))}
                                 </div>
 
+                                {/* Grade Cards Button */}
+                                <div className="relative">
+                                    <button
+                                        onClick={startGradingGame}
+                                        disabled={gradingCooldown > 0}
+                                        className={`card-corner w-full rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg py-4 ${
+                                            gradingCooldown > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
+                                        }`}
+                                        style={{
+                                            backgroundColor: gradingCooldown > 0 ? currentColors.bgTertiary : currentColors.bgSecondary,
+                                            border: `2px solid ${currentColors.accent}`,
+                                            color: currentColors.text
+                                        }}
+                                    >
+                                        <Star size={24} style={{ color: currentColors.accent }} />
+                                        <span className="text-lg font-bold">
+                                            {gradingCooldown > 0 ? `Cooldown: ${gradingCooldown}s` : 'GRADE CARDS'}
+                                        </span>
+                                        {gradingCooldown === 0 && <Zap size={24} style={{ color: currentColors.accent }} />}
+                                    </button>
+                                </div>
+
                                 {/* Message */}
                                 <div className="text-center">
                                     <div className="text-sm border rounded-lg py-3 px-5 font-medium" style={{
@@ -897,6 +1232,20 @@
                                         {message}
                                     </div>
                                 </div>
+
+                                {/* Mini-game Stats */}
+                                {totalGradingGames > 0 && (
+                                    <div className="border rounded-lg p-3 text-xs" style={{
+                                        backgroundColor: currentColors.bgSecondary,
+                                        borderColor: currentColors.borderLight,
+                                        color: currentColors.textSecondary
+                                    }}>
+                                        <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Grading Stats</div>
+                                        <div>Games Played: {totalGradingGames}</div>
+                                        <div>Perfect Grades: {perfectGrades}</div>
+                                        <div>Accuracy: {((perfectGrades / totalGradingGames) * 100).toFixed(1)}%</div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
