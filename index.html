@@ -59,6 +59,42 @@
             }
         }
 
+        @keyframes cardFlip {
+            0% {
+                transform: perspective(1000px) rotateY(0deg);
+            }
+            50% {
+                transform: perspective(1000px) rotateY(180deg);
+            }
+            100% {
+                transform: perspective(1000px) rotateY(360deg);
+            }
+        }
+
+        .animate-card-flip {
+            animation: cardFlip 0.6s ease-in-out;
+        }
+
+        @keyframes particle {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: particle 0.8s ease-out forwards;
+        }
+
         .animate-sparkle {
             animation: sparkle 0.6s ease-in-out;
         }
@@ -277,11 +313,42 @@
             const [cardsPerSecond, setCardsPerSecond] = useState(0);
             const [message, setMessage] = useState('Start selling cards!');
             const [clickAnimation, setClickAnimation] = useState(false);
+            const [cardFlipAnimation, setCardFlipAnimation] = useState(false);
             const [floatingNumbers, setFloatingNumbers] = useState([]);
+            const [particles, setParticles] = useState([]);
             const [totalClicks, setTotalClicks] = useState(0);
-            const [totalLootBoxes, setTotalLootBoxes] = useState(0);
             const [unlockedAchievements, setUnlockedAchievements] = useState([]);
             const [achievementNotification, setAchievementNotification] = useState(null);
+
+            // Sound effects using Web Audio API
+            const playSound = (frequency, duration, type = 'sine') => {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            };
+
+            const playSellSound = () => {
+                playSound(800, 0.1, 'sine');
+                setTimeout(() => playSound(1000, 0.1, 'sine'), 50);
+            };
+
+            const playUpgradeSound = () => {
+                playSound(523.25, 0.15, 'square');
+                setTimeout(() => playSound(659.25, 0.15, 'square'), 100);
+                setTimeout(() => playSound(783.99, 0.2, 'square'), 200);
+            };
 
             const toggleTheme = () => {
                 setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -521,82 +588,6 @@
             ]);
 
             const [portfolio, setPortfolio] = useState(upgrades.map(inv => ({ ...inv })));
-            const lootBoxes = [
-                {
-                    id: 'collector',
-                    name: 'Collector Crate',
-                    cost: 250,
-                    minReward: 150,
-                    maxReward: 600,
-                    bonusChance: 0.15,
-                    megaChance: 0.05,
-                    megaMultiplier: 3,
-                    description: 'Reliable flips with a chance at premium inserts.',
-                    emoji: '📦'
-                },
-                {
-                    id: 'elite',
-                    name: 'Elite Vault',
-                    cost: 2000,
-                    minReward: 1200,
-                    maxReward: 5000,
-                    bonusChance: 0.2,
-                    megaChance: 0.08,
-                    megaMultiplier: 4,
-                    description: 'High-end slabs and show-ready stock.',
-                    emoji: '🎁'
-                },
-                {
-                    id: 'legendary',
-                    name: 'Legendary Vault',
-                    cost: 12000,
-                    minReward: 6000,
-                    maxReward: 20000,
-                    bonusChance: 0.25,
-                    megaChance: 0.12,
-                    megaMultiplier: 5,
-                    description: 'Massive grails with golden ticket potential.',
-                    emoji: '💎'
-                },
-                {
-                    id: 'vintage',
-                    name: 'Vintage Treasure',
-                    cost: 75000,
-                    minReward: 40000,
-                    maxReward: 150000,
-                    bonusChance: 0.3,
-                    megaChance: 0.15,
-                    megaMultiplier: 6,
-                    description: 'Pre-war gems and legendary rookie cards.',
-                    emoji: '👑'
-                },
-                {
-                    id: 'grail',
-                    name: 'Holy Grail Vault',
-                    cost: 500000,
-                    minReward: 300000,
-                    maxReward: 1000000,
-                    bonusChance: 0.35,
-                    megaChance: 0.2,
-                    megaMultiplier: 8,
-                    description: 'Museum-quality specimens and 1-of-1 treasures.',
-                    emoji: '🏆'
-                },
-                {
-                    id: 'mythic',
-                    name: 'Mythic Collection',
-                    cost: 5000000,
-                    minReward: 3000000,
-                    maxReward: 12000000,
-                    bonusChance: 0.4,
-                    megaChance: 0.25,
-                    megaMultiplier: 10,
-                    description: 'Once-in-a-lifetime pulls. The ultimate gamble.',
-                    emoji: '⚡'
-                }
-            ];
-            const [lastLootPull, setLastLootPull] = useState(null);
-            const [lootAnimation, setLootAnimation] = useState(false);
 
             // Achievement definitions
             const achievements = [
@@ -619,10 +610,6 @@
                 { id: 'all_upgrades', name: 'Complete Portfolio', description: 'Own all upgrade types', icon: '🏅', condition: () => portfolio.every(u => u.owned > 0) },
                 { id: 'fifty_total', name: 'Business Expansion', description: 'Own 50 total upgrades', icon: '🏢', condition: () => portfolio.reduce((sum, u) => sum + u.owned, 0) >= 50 },
                 { id: 'hundred_total', name: 'Enterprise Scale', description: 'Own 100 total upgrades', icon: '🏭', condition: () => portfolio.reduce((sum, u) => sum + u.owned, 0) >= 100 },
-                { id: 'first_loot', name: 'Risk Taker', description: 'Open your first loot box', icon: '🎁', condition: () => totalLootBoxes >= 1 },
-                { id: 'loot_addict', name: 'Box Breaker', description: 'Open 25 loot boxes', icon: '📦', condition: () => totalLootBoxes >= 25 },
-                { id: 'loot_master', name: 'Vault Hunter', description: 'Open 100 loot boxes', icon: '🗝️', condition: () => totalLootBoxes >= 100 },
-                { id: 'loot_legend', name: 'Treasure Seeker', description: 'Open 500 loot boxes', icon: '💰', condition: () => totalLootBoxes >= 500 },
                 { id: 'passive_income', name: 'Autopilot', description: 'Generate $1,000/sec passive income', icon: '🚀', condition: () => cardsPerSecond >= 1000 },
                 { id: 'mega_passive', name: 'Money Machine', description: 'Generate $100,000/sec passive income', icon: '🤖', condition: () => cardsPerSecond >= 100000 },
                 { id: 'ultra_passive', name: 'Passive Empire', description: 'Generate $1,000,000/sec passive income', icon: '🌐', condition: () => cardsPerSecond >= 1000000 }
@@ -663,7 +650,7 @@
                         setTimeout(() => setAchievementNotification(null), 5000);
                     }
                 });
-            }, [totalClicks, totalEarned, portfolio, cardsPerSecond, totalLootBoxes, unlockedAchievements]);
+            }, [totalClicks, totalEarned, portfolio, cardsPerSecond, unlockedAchievements]);
 
             // Handle main click
             const handleClick = (e) => {
@@ -675,13 +662,41 @@
                 setTotalEarned(prev => prev + clickValue);
                 setTotalClicks(prev => prev + 1);
                 setClickAnimation(true);
-                setTimeout(() => setClickAnimation(false), 100);
+                setCardFlipAnimation(true);
 
+                // Play sell sound
+                playSellSound();
+
+                setTimeout(() => setClickAnimation(false), 100);
+                setTimeout(() => setCardFlipAnimation(false), 600);
+
+                // Add floating number
                 const id = Date.now();
                 setFloatingNumbers(prev => [...prev, { id, value: clickValue, x, y }]);
                 setTimeout(() => {
                     setFloatingNumbers(prev => prev.filter(n => n.id !== id));
                 }, 1000);
+
+                // Create particles
+                const particleCount = 8;
+                const newParticles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = (Math.PI * 2 * i) / particleCount;
+                    const distance = 50 + Math.random() * 50;
+                    const particleId = `${id}-${i}`;
+                    newParticles.push({
+                        id: particleId,
+                        x: x,
+                        y: y,
+                        tx: Math.cos(angle) * distance,
+                        ty: Math.sin(angle) * distance,
+                        color: theme === 'dark' ? '#D4A574' : '#8B7355'
+                    });
+                }
+                setParticles(prev => [...prev, ...newParticles]);
+                setTimeout(() => {
+                    setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+                }, 800);
             };
 
             const buyUpgrade = (id) => {
@@ -690,10 +705,13 @@
 
                 if (cash >= cost) {
                     setCash(cash - cost);
-                    setPortfolio(prev => prev.map(inv => 
+                    setPortfolio(prev => prev.map(inv =>
                         inv.id === id ? { ...inv, owned: inv.owned + 1 } : inv
                     ));
                     setMessage(`✓ Purchased ${upgrade.name}!`);
+
+                    // Play upgrade sound
+                    playUpgradeSound();
                 } else {
                     setMessage(`Need ${formatMoney(cost - cash)} more!`);
                 }
@@ -701,55 +719,6 @@
 
             const getCost = (upgrade) => {
                 return Math.floor(upgrade.baseCost * Math.pow(1.15, upgrade.owned));
-            };
-
-            const openLootBox = (id) => {
-                const box = lootBoxes.find(lb => lb.id === id);
-                if (!box) return;
-
-                if (cash < box.cost) {
-                    setMessage(`Need ${formatMoney(box.cost - cash)} more for the ${box.name}.`);
-                    return;
-                }
-
-                // Trigger animation
-                setLootAnimation(true);
-                setTimeout(() => setLootAnimation(false), 600);
-
-                const baseReward = Math.floor(Math.random() * (box.maxReward - box.minReward + 1)) + box.minReward;
-                const jackpot = Math.random() < box.bonusChance;
-                const megaHit = Math.random() < box.megaChance;
-
-                let totalReward = baseReward;
-                let rewardType = 'normal';
-
-                if (megaHit) {
-                    totalReward = Math.floor(baseReward * box.megaMultiplier);
-                    rewardType = 'mega';
-                } else if (jackpot) {
-                    totalReward = Math.floor(baseReward + box.maxReward * 1.5);
-                    rewardType = 'jackpot';
-                }
-
-                setCash(prev => prev - box.cost + totalReward);
-                setTotalEarned(prev => prev + totalReward);
-                setTotalLootBoxes(prev => prev + 1);
-                setLastLootPull({
-                    name: box.name,
-                    reward: totalReward,
-                    cost: box.cost,
-                    jackpot,
-                    megaHit,
-                    rewardType
-                });
-
-                if (megaHit) {
-                    setMessage(`🌟💥 MEGA HIT! ${box.name} exploded with ${formatMoney(totalReward)}! (${box.megaMultiplier}x MULTIPLIER!)`);
-                } else if (jackpot) {
-                    setMessage(`✨ ${box.name} dropped a GOLDEN HIT worth ${formatMoney(totalReward)}!`);
-                } else {
-                    setMessage(`${box.emoji} Pulled ${formatMoney(totalReward)} from the ${box.name}!`);
-                }
             };
 
             const formatMoney = (amount) => {
@@ -873,7 +842,7 @@
                                         onClick={handleClick}
                                         className={`card-corner w-full aspect-square active:scale-95 rounded-2xl transition-all duration-100 flex flex-col items-center justify-center gap-4 shadow-2xl ${
                                             clickAnimation ? 'scale-95' : 'scale-100'
-                                        }`}
+                                        } ${cardFlipAnimation ? 'animate-card-flip' : ''}`}
                                         style={{
                                             backgroundColor: currentColors.accent,
                                             boxShadow: `0 10px 40px ${currentColors.accent}60`
@@ -901,6 +870,21 @@
                                             +{formatMoney(num.value)}
                                         </div>
                                     ))}
+
+                                    {/* Particles */}
+                                    {particles.map(particle => (
+                                        <div
+                                            key={particle.id}
+                                            className="particle"
+                                            style={{
+                                                left: particle.x,
+                                                top: particle.y,
+                                                backgroundColor: particle.color,
+                                                '--tx': `${particle.tx}px`,
+                                                '--ty': `${particle.ty}px`
+                                            }}
+                                        />
+                                    ))}
                                 </div>
 
                                 {/* Message */}
@@ -912,80 +896,6 @@
                                     }}>
                                         {message}
                                     </div>
-                                </div>
-
-                                {/* Loot Boxes */}
-                                <div className={`border rounded-xl p-6 shadow-lg ${lootAnimation ? 'animate-shake' : ''}`} style={{
-                                    backgroundColor: currentColors.bgSecondary,
-                                    borderColor: currentColors.borderLight
-                                }}>
-                                    <div className="flex items-center justify-between mb-5">
-                                        <div>
-                                            <h3 className="text-xl font-bold" style={{ color: currentColors.text }}>Loot Boxes</h3>
-                                            <p className="text-xs mt-1" style={{ color: currentColors.textSecondary }}>Crack sealed product for instant bankroll boosts</p>
-                                        </div>
-                                        <div className="text-4xl drop-shadow-lg">🎁</div>
-                                    </div>
-
-                                    <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2">
-                                        {lootBoxes.map(box => {
-                                            const affordable = cash >= box.cost;
-                                            return (
-                                                <button
-                                                    key={box.id}
-                                                    onClick={() => openLootBox(box.id)}
-                                                    disabled={!affordable}
-                                                    className={`w-full text-left p-4 rounded-lg border transition-all ${
-                                                        affordable ? '' : 'opacity-40 cursor-not-allowed'
-                                                    }`}
-                                                    style={{
-                                                        backgroundColor: currentColors.bgTertiary,
-                                                        borderColor: affordable ? currentColors.borderLight : currentColors.borderLight
-                                                    }}
-                                                    onMouseEnter={(e) => affordable && (e.currentTarget.style.borderColor = currentColors.accent)}
-                                                    onMouseLeave={(e) => (e.currentTarget.style.borderColor = currentColors.borderLight)}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="text-3xl drop-shadow-lg">{box.emoji}</div>
-                                                        <div className="flex-1">
-                                                            <p className="text-base font-bold" style={{ color: currentColors.text }}>{box.name}</p>
-                                                            <p className="text-xs mt-0.5" style={{ color: currentColors.textSecondary }}>{box.description}</p>
-                                                            <div className="flex items-center gap-2 mt-1">
-                                                                <span className="text-xs" style={{ color: currentColors.textTertiary }}>⚡ {(box.bonusChance * 100).toFixed(0)}% bonus</span>
-                                                                <span className="text-xs" style={{ color: currentColors.textTertiary }}>💫 {(box.megaChance * 100).toFixed(0)}% mega ({box.megaMultiplier}x)</span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="text-right ml-2">
-                                                            <div className="text-base font-bold" style={{ color: currentColors.text }}>{formatMoney(box.cost)}</div>
-                                                            <div className="text-xs whitespace-nowrap" style={{ color: currentColors.textTertiary }}>{formatMoney(box.minReward)} - {formatMoney(box.maxReward)}</div>
-                                                        </div>
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {lastLootPull && (
-                                        <div className={`mt-4 border rounded-lg p-4 ${lastLootPull.megaHit ? 'animate-glow' : ''}`} style={{
-                                            backgroundColor: currentColors.bgTertiary,
-                                            borderColor: (lastLootPull.megaHit || lastLootPull.jackpot) ? currentColors.accent : currentColors.borderLight
-                                        }}>
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex-1">
-                                                    <div className="font-bold text-sm flex items-center gap-2" style={{ color: currentColors.text }}>
-                                                        {lastLootPull.name}
-                                                        {lastLootPull.megaHit && <span className="text-xs animate-sparkle" style={{ color: currentColors.accent }}>MEGA HIT!</span>}
-                                                        {lastLootPull.jackpot && !lastLootPull.megaHit && <span className="text-xs" style={{ color: currentColors.accent }}>JACKPOT!</span>}
-                                                    </div>
-                                                    <div className="text-xs mt-0.5" style={{ color: currentColors.accent }}>Rewarded {formatMoney(lastLootPull.reward)}</div>
-                                                    <p className="text-xs mt-1" style={{ color: currentColors.textTertiary }}>Cost: {formatMoney(lastLootPull.cost)} • Profit: {formatMoney(lastLootPull.reward - lastLootPull.cost)}</p>
-                                                </div>
-                                                <div className="text-3xl ml-2">
-                                                    {lastLootPull.megaHit ? '💥' : lastLootPull.jackpot ? '✨' : '💼'}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1041,6 +951,28 @@
                                                     </div>
 
                                                     <p className="text-xs mb-2" style={{ color: currentColors.textSecondary }}>{upgrade.description}</p>
+
+                                                    {/* Progress Bar */}
+                                                    <div className="mb-2">
+                                                        <div className="h-2 rounded-full overflow-hidden" style={{
+                                                            backgroundColor: currentColors.bgTertiary,
+                                                            border: `1px solid ${currentColors.borderLight}`
+                                                        }}>
+                                                            <div
+                                                                className="h-full transition-all duration-300 rounded-full"
+                                                                style={{
+                                                                    width: `${Math.min((cash / cost) * 100, 100)}%`,
+                                                                    backgroundColor: affordable ? currentColors.accent : currentColors.textTertiary,
+                                                                    boxShadow: affordable ? `0 0 10px ${currentColors.accent}` : 'none'
+                                                                }}
+                                                            />
+                                                        </div>
+                                                        {!affordable && (
+                                                            <div className="text-xs mt-1" style={{ color: currentColors.textTertiary }}>
+                                                                {formatMoney(cost - cash)} more needed
+                                                            </div>
+                                                        )}
+                                                    </div>
 
                                                     <div className="flex items-center justify-between">
                                                         <div className="text-xs" style={{ color: currentColors.textTertiary }}>
