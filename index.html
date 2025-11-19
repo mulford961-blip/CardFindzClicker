@@ -24,6 +24,44 @@
             animation: floatUp 1s ease-out forwards;
         }
 
+        @keyframes sparkle {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.2) rotate(180deg);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 5px rgba(247, 200, 105, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(247, 200, 105, 0.8), 0 0 30px rgba(247, 200, 105, 0.6);
+            }
+        }
+
+        .animate-sparkle {
+            animation: sparkle 0.6s ease-in-out;
+        }
+
+        .animate-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .animate-glow {
+            animation: glow 1s ease-in-out infinite;
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -233,6 +271,126 @@
                     clickBonus: 0,
                     perSecond: 2500,
                     description: '$2.5k/sec auto'
+                },
+                {
+                    id: 9,
+                    name: 'Vintage Card Vault',
+                    icon: Package,
+                    baseCost: 500000,
+                    owned: 0,
+                    clickBonus: 500,
+                    perSecond: 0,
+                    description: '+$500 per sale'
+                },
+                {
+                    id: 10,
+                    name: 'Regional Distribution',
+                    icon: Globe,
+                    baseCost: 1000000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 8000,
+                    description: '$8k/sec auto'
+                },
+                {
+                    id: 11,
+                    name: 'Card Authentication AI',
+                    icon: Zap,
+                    baseCost: 3500000,
+                    owned: 0,
+                    clickBonus: 2000,
+                    perSecond: 0,
+                    description: '+$2k per sale'
+                },
+                {
+                    id: 12,
+                    name: 'Auction House',
+                    icon: TrendingUp,
+                    baseCost: 8000000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 25000,
+                    description: '$25k/sec auto'
+                },
+                {
+                    id: 13,
+                    name: 'Hall of Fame Collection',
+                    icon: Star,
+                    baseCost: 20000000,
+                    owned: 0,
+                    clickBonus: 8000,
+                    perSecond: 0,
+                    description: '+$8k per sale'
+                },
+                {
+                    id: 14,
+                    name: 'Sports Network Deal',
+                    icon: Users,
+                    baseCost: 50000000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 100000,
+                    description: '$100k/sec auto'
+                },
+                {
+                    id: 15,
+                    name: '1-of-1 Card Broker',
+                    icon: DollarSign,
+                    baseCost: 150000000,
+                    owned: 0,
+                    clickBonus: 35000,
+                    perSecond: 0,
+                    description: '+$35k per sale'
+                },
+                {
+                    id: 16,
+                    name: 'International Empire',
+                    icon: Globe,
+                    baseCost: 400000000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 500000,
+                    description: '$500k/sec auto'
+                },
+                {
+                    id: 17,
+                    name: 'Card Museum',
+                    icon: Package,
+                    baseCost: 1000000000,
+                    owned: 0,
+                    clickBonus: 150000,
+                    perSecond: 0,
+                    description: '+$150k per sale'
+                },
+                {
+                    id: 18,
+                    name: 'Blockchain Card Platform',
+                    icon: Zap,
+                    baseCost: 3000000000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 2000000,
+                    description: '$2M/sec auto'
+                },
+                {
+                    id: 19,
+                    name: 'Legendary Card Syndicate',
+                    icon: Star,
+                    baseCost: 10000000000,
+                    owned: 0,
+                    clickBonus: 750000,
+                    perSecond: 0,
+                    description: '+$750k per sale'
+                },
+                {
+                    id: 20,
+                    name: 'Global Card Monopoly',
+                    icon: TrendingUp,
+                    baseCost: 50000000000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 10000000,
+                    description: '$10M/sec auto'
                 }
             ]);
 
@@ -245,7 +403,10 @@
                     minReward: 150,
                     maxReward: 600,
                     bonusChance: 0.15,
-                    description: 'Reliable flips with a chance at premium inserts.'
+                    megaChance: 0.05,
+                    megaMultiplier: 3,
+                    description: 'Reliable flips with a chance at premium inserts.',
+                    emoji: '📦'
                 },
                 {
                     id: 'elite',
@@ -254,7 +415,10 @@
                     minReward: 1200,
                     maxReward: 5000,
                     bonusChance: 0.2,
-                    description: 'High-end slabs and show-ready stock.'
+                    megaChance: 0.08,
+                    megaMultiplier: 4,
+                    description: 'High-end slabs and show-ready stock.',
+                    emoji: '🎁'
                 },
                 {
                     id: 'legendary',
@@ -262,11 +426,51 @@
                     cost: 12000,
                     minReward: 6000,
                     maxReward: 20000,
+                    bonusChance: 0.25,
+                    megaChance: 0.12,
+                    megaMultiplier: 5,
+                    description: 'Massive grails with golden ticket potential.',
+                    emoji: '💎'
+                },
+                {
+                    id: 'vintage',
+                    name: 'Vintage Treasure',
+                    cost: 75000,
+                    minReward: 40000,
+                    maxReward: 150000,
                     bonusChance: 0.3,
-                    description: 'Massive grails with golden ticket potential.'
+                    megaChance: 0.15,
+                    megaMultiplier: 6,
+                    description: 'Pre-war gems and legendary rookie cards.',
+                    emoji: '👑'
+                },
+                {
+                    id: 'grail',
+                    name: 'Holy Grail Vault',
+                    cost: 500000,
+                    minReward: 300000,
+                    maxReward: 1000000,
+                    bonusChance: 0.35,
+                    megaChance: 0.2,
+                    megaMultiplier: 8,
+                    description: 'Museum-quality specimens and 1-of-1 treasures.',
+                    emoji: '🏆'
+                },
+                {
+                    id: 'mythic',
+                    name: 'Mythic Collection',
+                    cost: 5000000,
+                    minReward: 3000000,
+                    maxReward: 12000000,
+                    bonusChance: 0.4,
+                    megaChance: 0.25,
+                    megaMultiplier: 10,
+                    description: 'Once-in-a-lifetime pulls. The ultimate gamble.',
+                    emoji: '⚡'
                 }
             ];
             const [lastLootPull, setLastLootPull] = useState(null);
+            const [lootAnimation, setLootAnimation] = useState(false);
 
             // Achievement definitions
             const achievements = [
@@ -274,18 +478,28 @@
                 { id: 'hundred_sales', name: 'Hustler', description: 'Make 100 sales', icon: '💪', condition: () => totalClicks >= 100 },
                 { id: 'thousand_sales', name: 'Card Dealer', description: 'Make 1,000 sales', icon: '🔥', condition: () => totalClicks >= 1000 },
                 { id: 'ten_thousand_sales', name: 'Trading Legend', description: 'Make 10,000 sales', icon: '⚡', condition: () => totalClicks >= 10000 },
+                { id: 'hundred_thousand_sales', name: 'Sales Titan', description: 'Make 100,000 sales', icon: '💫', condition: () => totalClicks >= 100000 },
                 { id: 'first_thousand', name: 'Getting Started', description: 'Earn $1,000', icon: '💵', condition: () => totalEarned >= 1000 },
                 { id: 'hundred_thousand', name: 'Big Leagues', description: 'Earn $100,000', icon: '💰', condition: () => totalEarned >= 100000 },
                 { id: 'one_million', name: 'Card Mogul!', description: 'Earn $1,000,000', icon: '🏆', condition: () => totalEarned >= 1000000 },
                 { id: 'ten_million', name: 'Millionaire Tycoon', description: 'Earn $10,000,000', icon: '👑', condition: () => totalEarned >= 10000000 },
                 { id: 'hundred_million', name: 'Card Empire', description: 'Earn $100,000,000', icon: '🌟', condition: () => totalEarned >= 100000000 },
+                { id: 'one_billion', name: 'Billionaire Status', description: 'Earn $1,000,000,000', icon: '💎', condition: () => totalEarned >= 1000000000 },
+                { id: 'ten_billion', name: 'Industry Domination', description: 'Earn $10,000,000,000', icon: '🔱', condition: () => totalEarned >= 10000000000 },
+                { id: 'hundred_billion', name: 'Card God', description: 'Earn $100,000,000,000', icon: '⚜️', condition: () => totalEarned >= 100000000000 },
                 { id: 'first_upgrade', name: 'Investor', description: 'Purchase your first upgrade', icon: '📈', condition: () => portfolio.some(u => u.owned > 0) },
                 { id: 'five_upgrades', name: 'Diversified', description: 'Own 5 different upgrade types', icon: '🎯', condition: () => portfolio.filter(u => u.owned > 0).length >= 5 },
-                { id: 'all_upgrades', name: 'Complete Portfolio', description: 'Own all upgrade types', icon: '💎', condition: () => portfolio.every(u => u.owned > 0) },
+                { id: 'ten_upgrades', name: 'Portfolio Builder', description: 'Own 10 different upgrade types', icon: '📊', condition: () => portfolio.filter(u => u.owned > 0).length >= 10 },
+                { id: 'all_upgrades', name: 'Complete Portfolio', description: 'Own all upgrade types', icon: '🏅', condition: () => portfolio.every(u => u.owned > 0) },
                 { id: 'fifty_total', name: 'Business Expansion', description: 'Own 50 total upgrades', icon: '🏢', condition: () => portfolio.reduce((sum, u) => sum + u.owned, 0) >= 50 },
+                { id: 'hundred_total', name: 'Enterprise Scale', description: 'Own 100 total upgrades', icon: '🏭', condition: () => portfolio.reduce((sum, u) => sum + u.owned, 0) >= 100 },
                 { id: 'first_loot', name: 'Risk Taker', description: 'Open your first loot box', icon: '🎁', condition: () => totalLootBoxes >= 1 },
                 { id: 'loot_addict', name: 'Box Breaker', description: 'Open 25 loot boxes', icon: '📦', condition: () => totalLootBoxes >= 25 },
-                { id: 'passive_income', name: 'Autopilot', description: 'Generate $1,000/sec passive income', icon: '🚀', condition: () => cardsPerSecond >= 1000 }
+                { id: 'loot_master', name: 'Vault Hunter', description: 'Open 100 loot boxes', icon: '🗝️', condition: () => totalLootBoxes >= 100 },
+                { id: 'loot_legend', name: 'Treasure Seeker', description: 'Open 500 loot boxes', icon: '💰', condition: () => totalLootBoxes >= 500 },
+                { id: 'passive_income', name: 'Autopilot', description: 'Generate $1,000/sec passive income', icon: '🚀', condition: () => cardsPerSecond >= 1000 },
+                { id: 'mega_passive', name: 'Money Machine', description: 'Generate $100,000/sec passive income', icon: '🤖', condition: () => cardsPerSecond >= 100000 },
+                { id: 'ultra_passive', name: 'Passive Empire', description: 'Generate $1,000,000/sec passive income', icon: '🌐', condition: () => cardsPerSecond >= 1000000 }
             ];
 
             // Calculate stats
@@ -372,10 +586,24 @@
                     return;
                 }
 
+                // Trigger animation
+                setLootAnimation(true);
+                setTimeout(() => setLootAnimation(false), 600);
+
                 const baseReward = Math.floor(Math.random() * (box.maxReward - box.minReward + 1)) + box.minReward;
                 const jackpot = Math.random() < box.bonusChance;
-                const jackpotBonus = jackpot ? Math.floor(box.maxReward * 1.5) : 0;
-                const totalReward = baseReward + jackpotBonus;
+                const megaHit = Math.random() < box.megaChance;
+
+                let totalReward = baseReward;
+                let rewardType = 'normal';
+
+                if (megaHit) {
+                    totalReward = Math.floor(baseReward * box.megaMultiplier);
+                    rewardType = 'mega';
+                } else if (jackpot) {
+                    totalReward = Math.floor(baseReward + box.maxReward * 1.5);
+                    rewardType = 'jackpot';
+                }
 
                 setCash(prev => prev - box.cost + totalReward);
                 setTotalEarned(prev => prev + totalReward);
@@ -384,13 +612,18 @@
                     name: box.name,
                     reward: totalReward,
                     cost: box.cost,
-                    jackpot
+                    jackpot,
+                    megaHit,
+                    rewardType
                 });
 
-                setMessage(jackpot
-                    ? `✨ ${box.name} dropped a GOLDEN HIT worth ${formatMoney(totalReward)}!`
-                    : `🎉 Pulled ${formatMoney(totalReward)} from the ${box.name}!`
-                );
+                if (megaHit) {
+                    setMessage(`🌟💥 MEGA HIT! ${box.name} exploded with ${formatMoney(totalReward)}! (${box.megaMultiplier}x MULTIPLIER!)`);
+                } else if (jackpot) {
+                    setMessage(`✨ ${box.name} dropped a GOLDEN HIT worth ${formatMoney(totalReward)}!`);
+                } else {
+                    setMessage(`${box.emoji} Pulled ${formatMoney(totalReward)} from the ${box.name}!`);
+                }
             };
 
             const formatMoney = (amount) => {
@@ -508,7 +741,7 @@
                                 </div>
 
                                 {/* Loot Boxes */}
-                                <div className="bg-[#1a0d05]/90 border-2 border-[#d9a648]/50 rounded-2xl p-6 shadow-xl">
+                                <div className={`bg-[#1a0d05]/90 border-2 border-[#d9a648]/50 rounded-2xl p-6 shadow-xl ${lootAnimation ? 'animate-shake' : ''}`}>
                                     <div className="flex items-center justify-between mb-5">
                                         <div>
                                             <h3 className="text-xl font-extrabold text-[#f7d793]">Loot Boxes</h3>
@@ -517,7 +750,7 @@
                                         <div className="text-4xl">🎁</div>
                                     </div>
 
-                                    <div className="space-y-2">
+                                    <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2">
                                         {lootBoxes.map(box => {
                                             const affordable = cash >= box.cost;
                                             return (
@@ -531,12 +764,17 @@
                                                             : 'bg-[#140903]/70 border-[#6d4b1f]/50 opacity-50 cursor-not-allowed'
                                                     }`}
                                                 >
-                                                    <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="text-3xl">{box.emoji}</div>
                                                         <div className="flex-1">
                                                             <p className="text-base font-bold text-[#ffe9bb]">{box.name}</p>
                                                             <p className="text-xs text-amber-200/80 mt-0.5">{box.description}</p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <span className="text-xs text-green-400/80">⚡ {(box.bonusChance * 100).toFixed(0)}% bonus</span>
+                                                                <span className="text-xs text-purple-400/80">💫 {(box.megaChance * 100).toFixed(0)}% mega ({box.megaMultiplier}x)</span>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-right ml-4">
+                                                        <div className="text-right ml-2">
                                                             <div className="text-base font-extrabold text-[#f7c869]">{formatMoney(box.cost)}</div>
                                                             <div className="text-xs text-amber-200/70 whitespace-nowrap">{formatMoney(box.minReward)} - {formatMoney(box.maxReward)}</div>
                                                         </div>
@@ -547,15 +785,25 @@
                                     </div>
 
                                     {lastLootPull && (
-                                        <div className="mt-4 bg-gradient-to-r from-[#120803]/90 to-[#1a0d05]/90 border-2 border-[#f4cc78]/40 rounded-xl p-4 shadow-md">
+                                        <div className={`mt-4 border-2 rounded-xl p-4 shadow-md ${
+                                            lastLootPull.megaHit
+                                                ? 'bg-gradient-to-r from-purple-900/90 to-pink-900/90 border-purple-400/60 animate-glow'
+                                                : lastLootPull.jackpot
+                                                ? 'bg-gradient-to-r from-yellow-900/90 to-orange-900/90 border-yellow-400/60'
+                                                : 'bg-gradient-to-r from-[#120803]/90 to-[#1a0d05]/90 border-[#f4cc78]/40'
+                                        }`}>
                                             <div className="flex items-center justify-between">
                                                 <div className="flex-1">
-                                                    <div className="font-bold text-[#fbe5b7] text-sm">{lastLootPull.name}</div>
+                                                    <div className="font-bold text-[#fbe5b7] text-sm flex items-center gap-2">
+                                                        {lastLootPull.name}
+                                                        {lastLootPull.megaHit && <span className="text-purple-300 text-xs animate-sparkle">MEGA HIT!</span>}
+                                                        {lastLootPull.jackpot && !lastLootPull.megaHit && <span className="text-yellow-300 text-xs">JACKPOT!</span>}
+                                                    </div>
                                                     <div className="text-amber-200/90 text-xs mt-0.5">Rewarded {formatMoney(lastLootPull.reward)}</div>
                                                     <p className="text-xs text-amber-100/60 mt-1">Cost: {formatMoney(lastLootPull.cost)} • Profit: {formatMoney(lastLootPull.reward - lastLootPull.cost)}</p>
                                                 </div>
                                                 <div className="text-3xl ml-2">
-                                                    {lastLootPull.jackpot ? '✨' : '💼'}
+                                                    {lastLootPull.megaHit ? '💥' : lastLootPull.jackpot ? '✨' : '💼'}
                                                 </div>
                                             </div>
                                         </div>
