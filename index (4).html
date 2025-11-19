@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardFindz Tycoon - Sports Card Empire</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px);
+            }
+        }
+        
+        .animate-float {
+            animation: floatUp 1s ease-out forwards;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // Icons as SVG components
+        const Package = ({ size = 24, className = "", strokeWidth = 2 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+        );
+
+        const CreditCard = ({ size = 24, className = "", strokeWidth = 2 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+        );
+
+        const TrendingUp = ({ size = 24, className = "", strokeWidth = 2 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+        );
+
+        const DollarSign = ({ size = 24, className = "", strokeWidth = 2 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+        );
+
+        const Zap = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+        );
+
+        const Store = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"></path>
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                <path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"></path>
+                <path d="M2 7h20"></path>
+                <path d="M22 7v3a2 2 0 0 1-2 2v0a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12v0a2 2 0 0 1-2-2V7"></path>
+            </svg>
+        );
+
+        const Users = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+        );
+
+        const Globe = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            </svg>
+        );
+
+        const Camera = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                <circle cx="12" cy="13" r="4"></circle>
+            </svg>
+        );
+
+        const Star = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+            </svg>
+        );
+
+        const CardFindzTycoon = () => {
+            const [cash, setCash] = useState(0);
+            const [totalEarned, setTotalEarned] = useState(0);
+            const [clickValue, setClickValue] = useState(1);
+            const [cardsPerSecond, setCardsPerSecond] = useState(0);
+            const [message, setMessage] = useState('Start selling cards!');
+            const [clickAnimation, setClickAnimation] = useState(false);
+            const [floatingNumbers, setFloatingNumbers] = useState([]);
+
+            const [upgrades] = useState([
+                {
+                    id: 1,
+                    name: 'Better Camera',
+                    icon: Camera,
+                    baseCost: 15,
+                    owned: 0,
+                    clickBonus: 1,
+                    perSecond: 0,
+                    description: '+$1 per sale'
+                },
+                {
+                    id: 2,
+                    name: 'eBay Store',
+                    icon: Store,
+                    baseCost: 100,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 1,
+                    description: '$1/sec auto'
+                },
+                {
+                    id: 3,
+                    name: 'Grading Service',
+                    icon: Star,
+                    baseCost: 500,
+                    owned: 0,
+                    clickBonus: 5,
+                    perSecond: 0,
+                    description: '+$5 per sale'
+                },
+                {
+                    id: 4,
+                    name: 'Instagram Ads',
+                    icon: Users,
+                    baseCost: 1200,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 10,
+                    description: '$10/sec auto'
+                },
+                {
+                    id: 5,
+                    name: 'Card Show Booth',
+                    icon: Package,
+                    baseCost: 5000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 60,
+                    description: '$60/sec auto'
+                },
+                {
+                    id: 6,
+                    name: 'Rare Card Dealer',
+                    icon: TrendingUp,
+                    baseCost: 12000,
+                    owned: 0,
+                    clickBonus: 75,
+                    perSecond: 0,
+                    description: '+$75 per sale'
+                },
+                {
+                    id: 7,
+                    name: 'Online Marketplace',
+                    icon: Globe,
+                    baseCost: 50000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 500,
+                    description: '$500/sec auto'
+                },
+                {
+                    id: 8,
+                    name: 'Card Grading Company',
+                    icon: Star,
+                    baseCost: 150000,
+                    owned: 0,
+                    clickBonus: 0,
+                    perSecond: 2500,
+                    description: '$2.5k/sec auto'
+                }
+            ]);
+
+            const [portfolio, setPortfolio] = useState(upgrades.map(inv => ({ ...inv })));
+
+            // Calculate stats
+            useEffect(() => {
+                let clickBonus = 1;
+                let autoMoney = 0;
+
+                portfolio.forEach(upgrade => {
+                    clickBonus += upgrade.clickBonus * upgrade.owned;
+                    autoMoney += upgrade.perSecond * upgrade.owned;
+                });
+
+                setClickValue(clickBonus);
+                setCardsPerSecond(autoMoney);
+            }, [portfolio]);
+
+            // Auto-generate money per second
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    if (cardsPerSecond > 0) {
+                        setCash(prev => prev + cardsPerSecond / 10);
+                        setTotalEarned(prev => prev + cardsPerSecond / 10);
+                    }
+                }, 100);
+
+                return () => clearInterval(interval);
+            }, [cardsPerSecond]);
+
+            // Handle main click
+            const handleClick = (e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                setCash(prev => prev + clickValue);
+                setTotalEarned(prev => prev + clickValue);
+                setClickAnimation(true);
+                setTimeout(() => setClickAnimation(false), 100);
+
+                const id = Date.now();
+                setFloatingNumbers(prev => [...prev, { id, value: clickValue, x, y }]);
+                setTimeout(() => {
+                    setFloatingNumbers(prev => prev.filter(n => n.id !== id));
+                }, 1000);
+            };
+
+            const buyUpgrade = (id) => {
+                const upgrade = portfolio.find(inv => inv.id === id);
+                const cost = Math.floor(upgrade.baseCost * Math.pow(1.15, upgrade.owned));
+                
+                if (cash >= cost) {
+                    setCash(cash - cost);
+                    setPortfolio(prev => prev.map(inv => 
+                        inv.id === id ? { ...inv, owned: inv.owned + 1 } : inv
+                    ));
+                    setMessage(`✓ Purchased ${upgrade.name}!`);
+                } else {
+                    setMessage(`Need ${formatMoney(cost - cash)} more!`);
+                }
+            };
+
+            const getCost = (upgrade) => {
+                return Math.floor(upgrade.baseCost * Math.pow(1.15, upgrade.owned));
+            };
+
+            const formatMoney = (amount) => {
+                if (amount >= 1000000000) {
+                    return `$${(amount / 1000000000).toFixed(2)}B`;
+                }
+                if (amount >= 1000000) {
+                    return `$${(amount / 1000000).toFixed(2)}M`;
+                }
+                if (amount >= 1000) {
+                    return `$${(amount / 1000).toFixed(2)}K`;
+                }
+                return `$${amount.toFixed(2)}`;
+            };
+
+            const canAfford = (upgrade) => {
+                return cash >= getCost(upgrade);
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
+                    {/* Top Bar - CardFindz Branding */}
+                    <div className="bg-gradient-to-r from-blue-600 to-orange-500 shadow-xl sticky top-0 z-10">
+                        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-lg">
+                                    <CreditCard size={24} className="text-blue-600" strokeWidth={2.5} />
+                                </div>
+                                <div>
+                                    <div className="text-2xl font-extrabold text-white tracking-tight">CardFindz</div>
+                                    <div className="text-xs text-blue-100 font-medium">Sports Card Tycoon</div>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-xs text-blue-100 font-semibold uppercase tracking-wide">Total Cash</div>
+                                <div className="text-2xl font-bold text-white">{formatMoney(cash)}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-0 lg:gap-8 min-h-screen">
+                        {/* Left Side - Click Area */}
+                        <div className="bg-slate-900/50 p-6 lg:p-8 flex flex-col justify-center items-center border-b lg:border-b-0 lg:border-r border-blue-800/30">
+                            <div className="w-full max-w-md">
+                                {/* Stats */}
+                                <div className="mb-8 space-y-3">
+                                    <div className="bg-gradient-to-br from-blue-600/20 to-orange-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5">
+                                        <div className="text-xs text-blue-300 uppercase tracking-wide font-semibold">Total Earnings</div>
+                                        <div className="text-3xl font-bold text-white mt-1">{formatMoney(totalEarned)}</div>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-slate-800/80 backdrop-blur-sm border border-blue-700/30 rounded-xl p-4">
+                                            <div className="text-xs text-blue-300 uppercase tracking-wide font-semibold">Per Sale</div>
+                                            <div className="text-xl font-bold text-orange-400 mt-1">{formatMoney(clickValue)}</div>
+                                        </div>
+                                        <div className="bg-slate-800/80 backdrop-blur-sm border border-blue-700/30 rounded-xl p-4">
+                                            <div className="text-xs text-blue-300 uppercase tracking-wide font-semibold">Per Second</div>
+                                            <div className="text-xl font-bold text-orange-400 mt-1">{formatMoney(cardsPerSecond)}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Click Button */}
+                                <div className="relative">
+                                    <button
+                                        onClick={handleClick}
+                                        className={`w-full aspect-square bg-gradient-to-br from-blue-500 via-blue-600 to-orange-500 hover:from-blue-400 hover:via-blue-500 hover:to-orange-400 rounded-3xl shadow-2xl transition-all duration-75 flex flex-col items-center justify-center gap-4 border-4 border-blue-300/20 ${
+                                            clickAnimation ? 'scale-95' : 'scale-100'
+                                        }`}
+                                    >
+                                        <CreditCard size={80} className="text-white" strokeWidth={2.5} />
+                                        <span className="text-3xl font-extrabold text-white tracking-tight">SELL CARD</span>
+                                        <span className="text-sm text-blue-100 font-medium">Click to sell!</span>
+                                    </button>
+
+                                    {/* Floating numbers */}
+                                    {floatingNumbers.map(num => (
+                                        <div
+                                            key={num.id}
+                                            className="absolute text-orange-400 font-bold text-2xl pointer-events-none animate-float"
+                                            style={{
+                                                left: num.x,
+                                                top: num.y
+                                            }}
+                                        >
+                                            +{formatMoney(num.value)}
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Message */}
+                                <div className="mt-6 text-center">
+                                    <div className="text-sm text-blue-200 bg-slate-800/80 backdrop-blur-sm border border-blue-700/30 rounded-xl py-3 px-4 font-medium">
+                                        {message}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Right Side - Upgrades */}
+                        <div className="bg-slate-900/50 p-6 lg:p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 89px)' }}>
+                            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                                <Package size={28} className="text-orange-400" />
+                                <span className="bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">Business Upgrades</span>
+                            </h2>
+
+                            <div className="space-y-3">
+                                {portfolio.map((upgrade) => {
+                                    const Icon = upgrade.icon;
+                                    const cost = getCost(upgrade);
+                                    const affordable = canAfford(upgrade);
+                                    
+                                    return (
+                                        <button
+                                            key={upgrade.id}
+                                            onClick={() => buyUpgrade(upgrade.id)}
+                                            disabled={!affordable}
+                                            className={`w-full bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700/80 rounded-xl p-4 transition-all text-left border-2 ${
+                                                affordable ? 'border-blue-500/50 hover:border-orange-500/70 hover:shadow-lg hover:shadow-orange-500/20' : 'border-slate-700/50 opacity-50'
+                                            }`}
+                                        >
+                                            <div className="flex items-start gap-4">
+                                                <div className={`p-3 rounded-lg ${affordable ? 'bg-gradient-to-br from-blue-500/30 to-orange-500/30' : 'bg-slate-700/50'}`}>
+                                                    <Icon size={24} className={affordable ? 'text-orange-400' : 'text-gray-500'} />
+                                                </div>
+                                                
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                                        <h3 className="font-bold text-white">{upgrade.name}</h3>
+                                                        <div className={`text-sm font-bold whitespace-nowrap ${affordable ? 'text-orange-400' : 'text-gray-500'}`}>
+                                                            {formatMoney(cost)}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <p className="text-sm text-blue-300 mb-2">{upgrade.description}</p>
+                                                    
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="text-xs text-gray-400">
+                                                            Owned: <span className="text-white font-semibold">{upgrade.owned}</span>
+                                                        </div>
+                                                        {upgrade.owned > 0 && (
+                                                            <div className="text-xs text-orange-400 font-semibold">
+                                                                {upgrade.perSecond > 0 
+                                                                    ? `+${formatMoney(upgrade.perSecond * upgrade.owned)}/sec`
+                                                                    : `+${formatMoney(upgrade.clickBonus * upgrade.owned)}/sale`
+                                                                }
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Achievement */}
+                            {totalEarned >= 1000000 && (
+                                <div className="mt-6 bg-gradient-to-r from-orange-500/20 to-blue-600/20 border-2 border-orange-500/50 rounded-xl p-6 text-center backdrop-blur-sm">
+                                    <div className="text-4xl mb-2">🏆</div>
+                                    <h3 className="text-2xl font-bold text-orange-400 mb-1">Card Mogul!</h3>
+                                    <p className="text-blue-200">You've earned over $1,000,000 in card sales!</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        ReactDOM.render(<CardFindzTycoon />, document.getElementById('root'));
+    </script>
+</body>
+</html>
