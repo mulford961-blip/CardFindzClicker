@@ -19,11 +19,11 @@
                 transform: translateY(-100px);
             }
         }
-        
+
         .animate-float {
             animation: floatUp 1s ease-out forwards;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -31,9 +31,29 @@
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        
+
         body {
             font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(26, 13, 5, 0.5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #8b5a23 0%, #f5c26a 100%);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #a46329 0%, #f7d793 100%);
         }
     </style>
 </head>
@@ -128,6 +148,10 @@
             const [message, setMessage] = useState('Start selling cards!');
             const [clickAnimation, setClickAnimation] = useState(false);
             const [floatingNumbers, setFloatingNumbers] = useState([]);
+            const [totalClicks, setTotalClicks] = useState(0);
+            const [totalLootBoxes, setTotalLootBoxes] = useState(0);
+            const [unlockedAchievements, setUnlockedAchievements] = useState([]);
+            const [achievementNotification, setAchievementNotification] = useState(null);
 
             const [upgrades] = useState([
                 {
@@ -244,6 +268,26 @@
             ];
             const [lastLootPull, setLastLootPull] = useState(null);
 
+            // Achievement definitions
+            const achievements = [
+                { id: 'first_sale', name: 'First Sale!', description: 'Sell your first card', icon: '🎉', condition: () => totalClicks >= 1 },
+                { id: 'hundred_sales', name: 'Hustler', description: 'Make 100 sales', icon: '💪', condition: () => totalClicks >= 100 },
+                { id: 'thousand_sales', name: 'Card Dealer', description: 'Make 1,000 sales', icon: '🔥', condition: () => totalClicks >= 1000 },
+                { id: 'ten_thousand_sales', name: 'Trading Legend', description: 'Make 10,000 sales', icon: '⚡', condition: () => totalClicks >= 10000 },
+                { id: 'first_thousand', name: 'Getting Started', description: 'Earn $1,000', icon: '💵', condition: () => totalEarned >= 1000 },
+                { id: 'hundred_thousand', name: 'Big Leagues', description: 'Earn $100,000', icon: '💰', condition: () => totalEarned >= 100000 },
+                { id: 'one_million', name: 'Card Mogul!', description: 'Earn $1,000,000', icon: '🏆', condition: () => totalEarned >= 1000000 },
+                { id: 'ten_million', name: 'Millionaire Tycoon', description: 'Earn $10,000,000', icon: '👑', condition: () => totalEarned >= 10000000 },
+                { id: 'hundred_million', name: 'Card Empire', description: 'Earn $100,000,000', icon: '🌟', condition: () => totalEarned >= 100000000 },
+                { id: 'first_upgrade', name: 'Investor', description: 'Purchase your first upgrade', icon: '📈', condition: () => portfolio.some(u => u.owned > 0) },
+                { id: 'five_upgrades', name: 'Diversified', description: 'Own 5 different upgrade types', icon: '🎯', condition: () => portfolio.filter(u => u.owned > 0).length >= 5 },
+                { id: 'all_upgrades', name: 'Complete Portfolio', description: 'Own all upgrade types', icon: '💎', condition: () => portfolio.every(u => u.owned > 0) },
+                { id: 'fifty_total', name: 'Business Expansion', description: 'Own 50 total upgrades', icon: '🏢', condition: () => portfolio.reduce((sum, u) => sum + u.owned, 0) >= 50 },
+                { id: 'first_loot', name: 'Risk Taker', description: 'Open your first loot box', icon: '🎁', condition: () => totalLootBoxes >= 1 },
+                { id: 'loot_addict', name: 'Box Breaker', description: 'Open 25 loot boxes', icon: '📦', condition: () => totalLootBoxes >= 25 },
+                { id: 'passive_income', name: 'Autopilot', description: 'Generate $1,000/sec passive income', icon: '🚀', condition: () => cardsPerSecond >= 1000 }
+            ];
+
             // Calculate stats
             useEffect(() => {
                 let clickBonus = 1;
@@ -270,6 +314,17 @@
                 return () => clearInterval(interval);
             }, [cardsPerSecond]);
 
+            // Check for achievements
+            useEffect(() => {
+                achievements.forEach(achievement => {
+                    if (!unlockedAchievements.includes(achievement.id) && achievement.condition()) {
+                        setUnlockedAchievements(prev => [...prev, achievement.id]);
+                        setAchievementNotification(achievement);
+                        setTimeout(() => setAchievementNotification(null), 5000);
+                    }
+                });
+            }, [totalClicks, totalEarned, portfolio, cardsPerSecond, totalLootBoxes, unlockedAchievements]);
+
             // Handle main click
             const handleClick = (e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
@@ -278,6 +333,7 @@
 
                 setCash(prev => prev + clickValue);
                 setTotalEarned(prev => prev + clickValue);
+                setTotalClicks(prev => prev + 1);
                 setClickAnimation(true);
                 setTimeout(() => setClickAnimation(false), 100);
 
@@ -323,6 +379,7 @@
 
                 setCash(prev => prev - box.cost + totalReward);
                 setTotalEarned(prev => prev + totalReward);
+                setTotalLootBoxes(prev => prev + 1);
                 setLastLootPull({
                     name: box.name,
                     reward: totalReward,
@@ -355,6 +412,20 @@
 
             return (
                 <div className="min-h-screen bg-gradient-to-br from-[#1d1207] via-[#120a04] to-[#050302] text-amber-50">
+                    {/* Achievement Notification */}
+                    {achievementNotification && (
+                        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
+                            <div className="bg-gradient-to-r from-[#8b5a23] via-[#f5c26a] to-[#8b5a23] border-4 border-[#fff1d4] rounded-2xl p-6 shadow-2xl min-w-[320px]">
+                                <div className="text-center">
+                                    <div className="text-5xl mb-2">{achievementNotification.icon}</div>
+                                    <div className="text-sm font-bold text-[#1a0e05] uppercase tracking-wide mb-1">Achievement Unlocked!</div>
+                                    <h3 className="text-2xl font-extrabold text-[#1a0e05] mb-1">{achievementNotification.name}</h3>
+                                    <p className="text-sm text-[#2d1908]">{achievementNotification.description}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Top Bar - CardFindz Branding */}
                     <div className="bg-gradient-to-r from-[#6a3b1c] via-[#8c5e2a] to-[#3b210d] shadow-xl sticky top-0 z-10 border-b border-[#e0b25c]/20">
                         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -377,22 +448,26 @@
                     <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-0 lg:gap-8 min-h-screen">
                         {/* Left Side - Click Area */}
                         <div className="bg-[#120803]/80 p-6 lg:p-8 flex flex-col justify-center items-center border-b lg:border-b-0 lg:border-r border-[#8a5b24]/40">
-                            <div className="w-full max-w-md">
+                            <div className="w-full max-w-md space-y-6">
                                 {/* Stats */}
-                                <div className="mb-8 space-y-3">
-                                    <div className="bg-gradient-to-br from-[#6b3b1b]/40 to-[#b7832f]/30 backdrop-blur-sm border border-[#c9953f]/40 rounded-xl p-5">
-                                        <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold">Total Earnings</div>
-                                        <div className="text-3xl font-bold text-[#ffe9bb] mt-1">{formatMoney(totalEarned)}</div>
+                                <div className="space-y-3">
+                                    <div className="bg-gradient-to-br from-[#6b3b1b]/50 to-[#b7832f]/40 backdrop-blur-sm border-2 border-[#c9953f]/50 rounded-2xl p-6 shadow-lg">
+                                        <div className="text-xs text-amber-200 uppercase tracking-wide font-bold mb-1">Total Earnings</div>
+                                        <div className="text-4xl font-extrabold text-[#ffe9bb]">{formatMoney(totalEarned)}</div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-[#1a0d05]/80 backdrop-blur-sm border border-[#c9953f]/30 rounded-xl p-4">
-                                            <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold">Per Sale</div>
-                                            <div className="text-xl font-bold text-[#f8c36c] mt-1">{formatMoney(clickValue)}</div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="bg-[#1a0d05]/90 backdrop-blur-sm border-2 border-[#c9953f]/40 rounded-xl p-4 shadow-md">
+                                            <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold mb-1">Per Sale</div>
+                                            <div className="text-xl font-bold text-[#f8c36c]">{formatMoney(clickValue)}</div>
                                         </div>
-                                        <div className="bg-[#1a0d05]/80 backdrop-blur-sm border border-[#c9953f]/30 rounded-xl p-4">
-                                            <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold">Per Second</div>
-                                            <div className="text-xl font-bold text-[#f8c36c] mt-1">{formatMoney(cardsPerSecond)}</div>
+                                        <div className="bg-[#1a0d05]/90 backdrop-blur-sm border-2 border-[#c9953f]/40 rounded-xl p-4 shadow-md">
+                                            <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold mb-1">Per Second</div>
+                                            <div className="text-xl font-bold text-[#f8c36c]">{formatMoney(cardsPerSecond)}</div>
+                                        </div>
+                                        <div className="bg-[#1a0d05]/90 backdrop-blur-sm border-2 border-[#c9953f]/40 rounded-xl p-4 shadow-md">
+                                            <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold mb-1">Total Sales</div>
+                                            <div className="text-xl font-bold text-[#f8c36c]">{totalClicks.toLocaleString()}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -401,20 +476,20 @@
                                 <div className="relative">
                                     <button
                                         onClick={handleClick}
-                                        className={`w-full aspect-square bg-gradient-to-br from-[#8a5623] via-[#c78c3b] to-[#714114] hover:from-[#a46329] hover:via-[#e0a84f] hover:to-[#8c541d] rounded-3xl shadow-2xl transition-all duration-75 flex flex-col items-center justify-center gap-4 border-4 border-[#f1cc7f]/20 ${
+                                        className={`w-full aspect-square bg-gradient-to-br from-[#8a5623] via-[#c78c3b] to-[#714114] hover:from-[#a46329] hover:via-[#e0a84f] hover:to-[#8c541d] active:scale-95 rounded-3xl shadow-2xl transition-all duration-100 flex flex-col items-center justify-center gap-4 border-4 border-[#f1cc7f]/30 hover:border-[#f1cc7f]/50 ${
                                             clickAnimation ? 'scale-95' : 'scale-100'
                                         }`}
                                     >
                                         <CreditCard size={80} className="text-[#fff1d4]" strokeWidth={2.5} />
-                                        <span className="text-3xl font-extrabold text-[#fff1d4] tracking-tight">SELL CARD</span>
-                                        <span className="text-sm text-amber-200 font-medium">Click to sell!</span>
+                                        <span className="text-3xl font-extrabold text-[#fff1d4] tracking-tight drop-shadow-lg">SELL CARD</span>
+                                        <span className="text-sm text-amber-200 font-semibold">Click to sell!</span>
                                     </button>
 
                                     {/* Floating numbers */}
                                     {floatingNumbers.map(num => (
                                         <div
                                             key={num.id}
-                                            className="absolute text-[#f7c869] font-bold text-2xl pointer-events-none animate-float"
+                                            className="absolute text-[#f7c869] font-bold text-3xl pointer-events-none animate-float drop-shadow-lg"
                                             style={{
                                                 left: num.x,
                                                 top: num.y
@@ -426,114 +501,114 @@
                                 </div>
 
                                 {/* Message */}
-                                <div className="mt-6 text-center">
-                                    <div className="text-sm text-amber-200 bg-[#1a0d05]/80 backdrop-blur-sm border border-[#c9953f]/30 rounded-xl py-3 px-4 font-medium">
+                                <div className="text-center">
+                                    <div className="text-sm text-amber-100 bg-[#1a0d05]/90 backdrop-blur-sm border-2 border-[#c9953f]/40 rounded-xl py-3 px-5 font-semibold shadow-md">
                                         {message}
                                     </div>
                                 </div>
 
                                 {/* Loot Boxes */}
-                                <div className="mt-8">
-                                    <div className="bg-[#1a0d05]/80 border border-[#d9a648]/40 rounded-2xl p-5 shadow-lg">
-                                        <div className="flex items-center justify-between mb-4">
-                                            <div>
-                                                <h3 className="text-xl font-bold text-[#f7d793]">Loot Boxes</h3>
-                                                <p className="text-sm text-amber-200/70">Crack sealed product for instant bankroll boosts.</p>
-                                            </div>
-                                            <div className="text-3xl">🎁</div>
+                                <div className="bg-[#1a0d05]/90 border-2 border-[#d9a648]/50 rounded-2xl p-6 shadow-xl">
+                                    <div className="flex items-center justify-between mb-5">
+                                        <div>
+                                            <h3 className="text-xl font-extrabold text-[#f7d793]">Loot Boxes</h3>
+                                            <p className="text-xs text-amber-200/80 mt-1">Crack sealed product for instant bankroll boosts</p>
                                         </div>
-
-                                        <div className="space-y-3">
-                                            {lootBoxes.map(box => {
-                                                const affordable = cash >= box.cost;
-                                                return (
-                                                    <button
-                                                        key={box.id}
-                                                        onClick={() => openLootBox(box.id)}
-                                                        disabled={!affordable}
-                                                        className={`w-full text-left p-4 rounded-xl border transition-all ${
-                                                            affordable
-                                                                ? 'bg-gradient-to-r from-[#6b3b1b]/70 to-[#b97a2e]/70 border-[#f3c96a]/40 hover:shadow-lg hover:shadow-[#f3c96a]/20'
-                                                                : 'bg-[#140903]/60 border-[#6d4b1f]/40 opacity-60'
-                                                        }`}
-                                                    >
-                                                        <div className="flex items-center justify-between">
-                                                            <div>
-                                                                <p className="text-lg font-semibold text-[#ffe9bb]">{box.name}</p>
-                                                                <p className="text-sm text-amber-200/80">{box.description}</p>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <div className="text-sm font-bold text-[#f7c869]">{formatMoney(box.cost)}</div>
-                                                                <div className="text-xs text-amber-200/70">{formatMoney(box.minReward)} - {formatMoney(box.maxReward)}</div>
-                                                            </div>
-                                                        </div>
-                                                    </button>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {lastLootPull && (
-                                            <div className="mt-4 bg-[#120803]/80 border border-[#f4cc78]/30 rounded-xl p-4 text-sm">
-                                                <div className="flex items-center justify-between">
-                                                    <div>
-                                                        <div className="font-semibold text-[#fbe5b7]">{lastLootPull.name}</div>
-                                                        <div className="text-amber-200/80">Rewarded {formatMoney(lastLootPull.reward)}</div>
-                                                    </div>
-                                                    <div className="text-right text-lg">
-                                                        {lastLootPull.jackpot ? '✨' : '💼'}
-                                                    </div>
-                                                </div>
-                                                <p className="text-xs text-amber-100/70 mt-2">Cost: {formatMoney(lastLootPull.cost)} • Return: {formatMoney(lastLootPull.reward - lastLootPull.cost)}</p>
-                                            </div>
-                                        )}
+                                        <div className="text-4xl">🎁</div>
                                     </div>
+
+                                    <div className="space-y-2">
+                                        {lootBoxes.map(box => {
+                                            const affordable = cash >= box.cost;
+                                            return (
+                                                <button
+                                                    key={box.id}
+                                                    onClick={() => openLootBox(box.id)}
+                                                    disabled={!affordable}
+                                                    className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                                                        affordable
+                                                            ? 'bg-gradient-to-r from-[#6b3b1b]/80 to-[#b97a2e]/80 border-[#f3c96a]/50 hover:shadow-lg hover:shadow-[#f3c96a]/30 hover:scale-[1.02] active:scale-100'
+                                                            : 'bg-[#140903]/70 border-[#6d4b1f]/50 opacity-50 cursor-not-allowed'
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <div className="flex-1">
+                                                            <p className="text-base font-bold text-[#ffe9bb]">{box.name}</p>
+                                                            <p className="text-xs text-amber-200/80 mt-0.5">{box.description}</p>
+                                                        </div>
+                                                        <div className="text-right ml-4">
+                                                            <div className="text-base font-extrabold text-[#f7c869]">{formatMoney(box.cost)}</div>
+                                                            <div className="text-xs text-amber-200/70 whitespace-nowrap">{formatMoney(box.minReward)} - {formatMoney(box.maxReward)}</div>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    {lastLootPull && (
+                                        <div className="mt-4 bg-gradient-to-r from-[#120803]/90 to-[#1a0d05]/90 border-2 border-[#f4cc78]/40 rounded-xl p-4 shadow-md">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex-1">
+                                                    <div className="font-bold text-[#fbe5b7] text-sm">{lastLootPull.name}</div>
+                                                    <div className="text-amber-200/90 text-xs mt-0.5">Rewarded {formatMoney(lastLootPull.reward)}</div>
+                                                    <p className="text-xs text-amber-100/60 mt-1">Cost: {formatMoney(lastLootPull.cost)} • Profit: {formatMoney(lastLootPull.reward - lastLootPull.cost)}</p>
+                                                </div>
+                                                <div className="text-3xl ml-2">
+                                                    {lastLootPull.jackpot ? '✨' : '💼'}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Right Side - Upgrades */}
                         <div className="bg-[#0f0602]/80 p-6 lg:p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 89px)' }}>
-                            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                            <h2 className="text-2xl font-extrabold mb-6 flex items-center gap-3">
                                 <Package size={28} className="text-[#f7c869]" />
                                 <span className="bg-gradient-to-r from-[#f7c869] to-[#c5802d] bg-clip-text text-transparent">Business Upgrades</span>
                             </h2>
 
-                            <div className="space-y-3">
+                            <div className="space-y-2.5 mb-8">
                                 {portfolio.map((upgrade) => {
                                     const Icon = upgrade.icon;
                                     const cost = getCost(upgrade);
                                     const affordable = canAfford(upgrade);
-                                    
+
                                     return (
                                         <button
                                             key={upgrade.id}
                                             onClick={() => buyUpgrade(upgrade.id)}
                                             disabled={!affordable}
-                                            className={`w-full bg-[#160903]/80 backdrop-blur-sm hover:bg-[#1f0d05]/80 rounded-xl p-4 transition-all text-left border-2 ${
-                                                affordable ? 'border-[#f1c86d]/40 hover:border-[#f4da9d]/60 hover:shadow-lg hover:shadow-[#f4da9d]/10' : 'border-[#4b2d12]/60 opacity-50'
+                                            className={`w-full bg-[#160903]/90 backdrop-blur-sm rounded-xl p-4 transition-all duration-150 text-left border-2 shadow-md ${
+                                                affordable
+                                                    ? 'border-[#f1c86d]/50 hover:border-[#f4da9d]/70 hover:shadow-lg hover:shadow-[#f4da9d]/20 hover:scale-[1.02] active:scale-100'
+                                                    : 'border-[#4b2d12]/60 opacity-50 cursor-not-allowed'
                                             }`}
                                         >
                                             <div className="flex items-start gap-4">
-                                                <div className={`p-3 rounded-lg ${affordable ? 'bg-gradient-to-br from-[#8b5a23]/40 to-[#f5c26a]/40' : 'bg-[#2d1908]/70'}`}>
+                                                <div className={`p-3 rounded-xl shadow-md ${affordable ? 'bg-gradient-to-br from-[#8b5a23]/50 to-[#f5c26a]/50' : 'bg-[#2d1908]/80'}`}>
                                                     <Icon size={24} className={affordable ? 'text-[#f5c26a]' : 'text-gray-500'} />
                                                 </div>
 
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between gap-2 mb-1">
-                                                        <h3 className="font-bold text-[#ffe9bb]">{upgrade.name}</h3>
-                                                        <div className={`text-sm font-bold whitespace-nowrap ${affordable ? 'text-[#f7c869]' : 'text-gray-500'}`}>
+                                                        <h3 className="font-bold text-[#ffe9bb] text-base">{upgrade.name}</h3>
+                                                        <div className={`text-sm font-extrabold whitespace-nowrap ${affordable ? 'text-[#f7c869]' : 'text-gray-500'}`}>
                                                             {formatMoney(cost)}
                                                         </div>
                                                     </div>
 
-                                                    <p className="text-sm text-amber-200/80 mb-2">{upgrade.description}</p>
+                                                    <p className="text-xs text-amber-200/80 mb-2">{upgrade.description}</p>
 
                                                     <div className="flex items-center justify-between">
-                                                        <div className="text-xs text-amber-200/60">
-                                                            Owned: <span className="text-[#fff1d4] font-semibold">{upgrade.owned}</span>
+                                                        <div className="text-xs text-amber-200/70">
+                                                            Owned: <span className="text-[#fff1d4] font-bold">{upgrade.owned}</span>
                                                         </div>
                                                         {upgrade.owned > 0 && (
-                                                            <div className="text-xs text-[#f7c869] font-semibold">
+                                                            <div className="text-xs text-[#f7c869] font-bold">
                                                                 {upgrade.perSecond > 0
                                                                     ? `+${formatMoney(upgrade.perSecond * upgrade.owned)}/sec`
                                                                     : `+${formatMoney(upgrade.clickBonus * upgrade.owned)}/sale`
@@ -548,14 +623,51 @@
                                 })}
                             </div>
 
-                            {/* Achievement */}
-                            {totalEarned >= 1000000 && (
-                                <div className="mt-6 bg-gradient-to-r from-[#b97a2e]/20 to-[#f7c869]/20 border-2 border-[#f3c96a]/50 rounded-xl p-6 text-center backdrop-blur-sm">
-                                    <div className="text-4xl mb-2">🏆</div>
-                                    <h3 className="text-2xl font-bold text-[#f7c869] mb-1">Card Mogul!</h3>
-                                    <p className="text-amber-200">You've earned over $1,000,000 in card sales!</p>
+                            {/* Achievements */}
+                            <div className="bg-gradient-to-br from-[#1a0d05]/90 to-[#0f0602]/90 border-2 border-[#d9a648]/50 rounded-2xl p-6 shadow-xl">
+                                <div className="flex items-center justify-between mb-5">
+                                    <div>
+                                        <h3 className="text-xl font-extrabold text-[#f7d793]">Achievements</h3>
+                                        <p className="text-xs text-amber-200/80 mt-1">
+                                            {unlockedAchievements.length} / {achievements.length} Unlocked
+                                        </p>
+                                    </div>
+                                    <div className="text-4xl">🏆</div>
                                 </div>
-                            )}
+
+                                <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
+                                    {achievements.map((achievement) => {
+                                        const isUnlocked = unlockedAchievements.includes(achievement.id);
+                                        return (
+                                            <div
+                                                key={achievement.id}
+                                                className={`p-4 rounded-xl border-2 transition-all ${
+                                                    isUnlocked
+                                                        ? 'bg-gradient-to-r from-[#6b3b1b]/80 to-[#b97a2e]/80 border-[#f3c96a]/60 shadow-md'
+                                                        : 'bg-[#0f0602]/80 border-[#4b2d12]/60 opacity-50'
+                                                }`}
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className={`text-3xl ${isUnlocked ? '' : 'grayscale opacity-40'}`}>
+                                                        {achievement.icon}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className={`font-bold text-sm ${isUnlocked ? 'text-[#ffe9bb]' : 'text-amber-200/60'}`}>
+                                                            {achievement.name}
+                                                        </h4>
+                                                        <p className={`text-xs mt-0.5 ${isUnlocked ? 'text-amber-200/90' : 'text-amber-200/50'}`}>
+                                                            {achievement.description}
+                                                        </p>
+                                                    </div>
+                                                    {isUnlocked && (
+                                                        <div className="text-green-400 text-xl">✓</div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
