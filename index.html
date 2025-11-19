@@ -213,6 +213,36 @@
             ]);
 
             const [portfolio, setPortfolio] = useState(upgrades.map(inv => ({ ...inv })));
+            const lootBoxes = [
+                {
+                    id: 'collector',
+                    name: 'Collector Crate',
+                    cost: 250,
+                    minReward: 150,
+                    maxReward: 600,
+                    bonusChance: 0.15,
+                    description: 'Reliable flips with a chance at premium inserts.'
+                },
+                {
+                    id: 'elite',
+                    name: 'Elite Vault',
+                    cost: 2000,
+                    minReward: 1200,
+                    maxReward: 5000,
+                    bonusChance: 0.2,
+                    description: 'High-end slabs and show-ready stock.'
+                },
+                {
+                    id: 'legendary',
+                    name: 'Legendary Vault',
+                    cost: 12000,
+                    minReward: 6000,
+                    maxReward: 20000,
+                    bonusChance: 0.3,
+                    description: 'Massive grails with golden ticket potential.'
+                }
+            ];
+            const [lastLootPull, setLastLootPull] = useState(null);
 
             // Calculate stats
             useEffect(() => {
@@ -261,7 +291,7 @@
             const buyUpgrade = (id) => {
                 const upgrade = portfolio.find(inv => inv.id === id);
                 const cost = Math.floor(upgrade.baseCost * Math.pow(1.15, upgrade.owned));
-                
+
                 if (cash >= cost) {
                     setCash(cash - cost);
                     setPortfolio(prev => prev.map(inv => 
@@ -275,6 +305,35 @@
 
             const getCost = (upgrade) => {
                 return Math.floor(upgrade.baseCost * Math.pow(1.15, upgrade.owned));
+            };
+
+            const openLootBox = (id) => {
+                const box = lootBoxes.find(lb => lb.id === id);
+                if (!box) return;
+
+                if (cash < box.cost) {
+                    setMessage(`Need ${formatMoney(box.cost - cash)} more for the ${box.name}.`);
+                    return;
+                }
+
+                const baseReward = Math.floor(Math.random() * (box.maxReward - box.minReward + 1)) + box.minReward;
+                const jackpot = Math.random() < box.bonusChance;
+                const jackpotBonus = jackpot ? Math.floor(box.maxReward * 1.5) : 0;
+                const totalReward = baseReward + jackpotBonus;
+
+                setCash(prev => prev - box.cost + totalReward);
+                setTotalEarned(prev => prev + totalReward);
+                setLastLootPull({
+                    name: box.name,
+                    reward: totalReward,
+                    cost: box.cost,
+                    jackpot
+                });
+
+                setMessage(jackpot
+                    ? `✨ ${box.name} dropped a GOLDEN HIT worth ${formatMoney(totalReward)}!`
+                    : `🎉 Pulled ${formatMoney(totalReward)} from the ${box.name}!`
+                );
             };
 
             const formatMoney = (amount) => {
@@ -295,45 +354,45 @@
             };
 
             return (
-                <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white">
+                <div className="min-h-screen bg-gradient-to-br from-[#1d1207] via-[#120a04] to-[#050302] text-amber-50">
                     {/* Top Bar - CardFindz Branding */}
-                    <div className="bg-gradient-to-r from-blue-600 to-orange-500 shadow-xl sticky top-0 z-10">
+                    <div className="bg-gradient-to-r from-[#6a3b1c] via-[#8c5e2a] to-[#3b210d] shadow-xl sticky top-0 z-10 border-b border-[#e0b25c]/20">
                         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center shadow-lg">
-                                    <CreditCard size={24} className="text-blue-600" strokeWidth={2.5} />
+                                <div className="w-10 h-10 bg-[#1a0e05] border border-[#f1cc7f]/40 rounded-lg flex items-center justify-center shadow-lg">
+                                    <CreditCard size={24} className="text-[#f1cc7f]" strokeWidth={2.5} />
                                 </div>
                                 <div>
-                                    <div className="text-2xl font-extrabold text-white tracking-tight">CardFindz</div>
-                                    <div className="text-xs text-blue-100 font-medium">Sports Card Tycoon</div>
+                                    <div className="text-2xl font-extrabold text-[#f8e3b5] tracking-tight">CardFindz</div>
+                                    <div className="text-xs text-[#ffd98d] font-medium">Sports Card Tycoon</div>
                                 </div>
                             </div>
                             <div className="text-right">
-                                <div className="text-xs text-blue-100 font-semibold uppercase tracking-wide">Total Cash</div>
-                                <div className="text-2xl font-bold text-white">{formatMoney(cash)}</div>
+                                <div className="text-xs text-[#ffd98d] font-semibold uppercase tracking-wide">Total Cash</div>
+                                <div className="text-2xl font-bold text-[#fbe5b7]">{formatMoney(cash)}</div>
                             </div>
                         </div>
                     </div>
 
                     <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-0 lg:gap-8 min-h-screen">
                         {/* Left Side - Click Area */}
-                        <div className="bg-slate-900/50 p-6 lg:p-8 flex flex-col justify-center items-center border-b lg:border-b-0 lg:border-r border-blue-800/30">
+                        <div className="bg-[#120803]/80 p-6 lg:p-8 flex flex-col justify-center items-center border-b lg:border-b-0 lg:border-r border-[#8a5b24]/40">
                             <div className="w-full max-w-md">
                                 {/* Stats */}
                                 <div className="mb-8 space-y-3">
-                                    <div className="bg-gradient-to-br from-blue-600/20 to-orange-500/20 backdrop-blur-sm border border-blue-500/30 rounded-xl p-5">
-                                        <div className="text-xs text-blue-300 uppercase tracking-wide font-semibold">Total Earnings</div>
-                                        <div className="text-3xl font-bold text-white mt-1">{formatMoney(totalEarned)}</div>
+                                    <div className="bg-gradient-to-br from-[#6b3b1b]/40 to-[#b7832f]/30 backdrop-blur-sm border border-[#c9953f]/40 rounded-xl p-5">
+                                        <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold">Total Earnings</div>
+                                        <div className="text-3xl font-bold text-[#ffe9bb] mt-1">{formatMoney(totalEarned)}</div>
                                     </div>
-                                    
+
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-slate-800/80 backdrop-blur-sm border border-blue-700/30 rounded-xl p-4">
-                                            <div className="text-xs text-blue-300 uppercase tracking-wide font-semibold">Per Sale</div>
-                                            <div className="text-xl font-bold text-orange-400 mt-1">{formatMoney(clickValue)}</div>
+                                        <div className="bg-[#1a0d05]/80 backdrop-blur-sm border border-[#c9953f]/30 rounded-xl p-4">
+                                            <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold">Per Sale</div>
+                                            <div className="text-xl font-bold text-[#f8c36c] mt-1">{formatMoney(clickValue)}</div>
                                         </div>
-                                        <div className="bg-slate-800/80 backdrop-blur-sm border border-blue-700/30 rounded-xl p-4">
-                                            <div className="text-xs text-blue-300 uppercase tracking-wide font-semibold">Per Second</div>
-                                            <div className="text-xl font-bold text-orange-400 mt-1">{formatMoney(cardsPerSecond)}</div>
+                                        <div className="bg-[#1a0d05]/80 backdrop-blur-sm border border-[#c9953f]/30 rounded-xl p-4">
+                                            <div className="text-xs text-amber-200 uppercase tracking-wide font-semibold">Per Second</div>
+                                            <div className="text-xl font-bold text-[#f8c36c] mt-1">{formatMoney(cardsPerSecond)}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -342,20 +401,20 @@
                                 <div className="relative">
                                     <button
                                         onClick={handleClick}
-                                        className={`w-full aspect-square bg-gradient-to-br from-blue-500 via-blue-600 to-orange-500 hover:from-blue-400 hover:via-blue-500 hover:to-orange-400 rounded-3xl shadow-2xl transition-all duration-75 flex flex-col items-center justify-center gap-4 border-4 border-blue-300/20 ${
+                                        className={`w-full aspect-square bg-gradient-to-br from-[#8a5623] via-[#c78c3b] to-[#714114] hover:from-[#a46329] hover:via-[#e0a84f] hover:to-[#8c541d] rounded-3xl shadow-2xl transition-all duration-75 flex flex-col items-center justify-center gap-4 border-4 border-[#f1cc7f]/20 ${
                                             clickAnimation ? 'scale-95' : 'scale-100'
                                         }`}
                                     >
-                                        <CreditCard size={80} className="text-white" strokeWidth={2.5} />
-                                        <span className="text-3xl font-extrabold text-white tracking-tight">SELL CARD</span>
-                                        <span className="text-sm text-blue-100 font-medium">Click to sell!</span>
+                                        <CreditCard size={80} className="text-[#fff1d4]" strokeWidth={2.5} />
+                                        <span className="text-3xl font-extrabold text-[#fff1d4] tracking-tight">SELL CARD</span>
+                                        <span className="text-sm text-amber-200 font-medium">Click to sell!</span>
                                     </button>
 
                                     {/* Floating numbers */}
                                     {floatingNumbers.map(num => (
                                         <div
                                             key={num.id}
-                                            className="absolute text-orange-400 font-bold text-2xl pointer-events-none animate-float"
+                                            className="absolute text-[#f7c869] font-bold text-2xl pointer-events-none animate-float"
                                             style={{
                                                 left: num.x,
                                                 top: num.y
@@ -368,18 +427,75 @@
 
                                 {/* Message */}
                                 <div className="mt-6 text-center">
-                                    <div className="text-sm text-blue-200 bg-slate-800/80 backdrop-blur-sm border border-blue-700/30 rounded-xl py-3 px-4 font-medium">
+                                    <div className="text-sm text-amber-200 bg-[#1a0d05]/80 backdrop-blur-sm border border-[#c9953f]/30 rounded-xl py-3 px-4 font-medium">
                                         {message}
+                                    </div>
+                                </div>
+
+                                {/* Loot Boxes */}
+                                <div className="mt-8">
+                                    <div className="bg-[#1a0d05]/80 border border-[#d9a648]/40 rounded-2xl p-5 shadow-lg">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <div>
+                                                <h3 className="text-xl font-bold text-[#f7d793]">Loot Boxes</h3>
+                                                <p className="text-sm text-amber-200/70">Crack sealed product for instant bankroll boosts.</p>
+                                            </div>
+                                            <div className="text-3xl">🎁</div>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {lootBoxes.map(box => {
+                                                const affordable = cash >= box.cost;
+                                                return (
+                                                    <button
+                                                        key={box.id}
+                                                        onClick={() => openLootBox(box.id)}
+                                                        disabled={!affordable}
+                                                        className={`w-full text-left p-4 rounded-xl border transition-all ${
+                                                            affordable
+                                                                ? 'bg-gradient-to-r from-[#6b3b1b]/70 to-[#b97a2e]/70 border-[#f3c96a]/40 hover:shadow-lg hover:shadow-[#f3c96a]/20'
+                                                                : 'bg-[#140903]/60 border-[#6d4b1f]/40 opacity-60'
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center justify-between">
+                                                            <div>
+                                                                <p className="text-lg font-semibold text-[#ffe9bb]">{box.name}</p>
+                                                                <p className="text-sm text-amber-200/80">{box.description}</p>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-sm font-bold text-[#f7c869]">{formatMoney(box.cost)}</div>
+                                                                <div className="text-xs text-amber-200/70">{formatMoney(box.minReward)} - {formatMoney(box.maxReward)}</div>
+                                                            </div>
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {lastLootPull && (
+                                            <div className="mt-4 bg-[#120803]/80 border border-[#f4cc78]/30 rounded-xl p-4 text-sm">
+                                                <div className="flex items-center justify-between">
+                                                    <div>
+                                                        <div className="font-semibold text-[#fbe5b7]">{lastLootPull.name}</div>
+                                                        <div className="text-amber-200/80">Rewarded {formatMoney(lastLootPull.reward)}</div>
+                                                    </div>
+                                                    <div className="text-right text-lg">
+                                                        {lastLootPull.jackpot ? '✨' : '💼'}
+                                                    </div>
+                                                </div>
+                                                <p className="text-xs text-amber-100/70 mt-2">Cost: {formatMoney(lastLootPull.cost)} • Return: {formatMoney(lastLootPull.reward - lastLootPull.cost)}</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Right Side - Upgrades */}
-                        <div className="bg-slate-900/50 p-6 lg:p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 89px)' }}>
+                        <div className="bg-[#0f0602]/80 p-6 lg:p-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 89px)' }}>
                             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                                <Package size={28} className="text-orange-400" />
-                                <span className="bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent">Business Upgrades</span>
+                                <Package size={28} className="text-[#f7c869]" />
+                                <span className="bg-gradient-to-r from-[#f7c869] to-[#c5802d] bg-clip-text text-transparent">Business Upgrades</span>
                             </h2>
 
                             <div className="space-y-3">
@@ -393,32 +509,32 @@
                                             key={upgrade.id}
                                             onClick={() => buyUpgrade(upgrade.id)}
                                             disabled={!affordable}
-                                            className={`w-full bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700/80 rounded-xl p-4 transition-all text-left border-2 ${
-                                                affordable ? 'border-blue-500/50 hover:border-orange-500/70 hover:shadow-lg hover:shadow-orange-500/20' : 'border-slate-700/50 opacity-50'
+                                            className={`w-full bg-[#160903]/80 backdrop-blur-sm hover:bg-[#1f0d05]/80 rounded-xl p-4 transition-all text-left border-2 ${
+                                                affordable ? 'border-[#f1c86d]/40 hover:border-[#f4da9d]/60 hover:shadow-lg hover:shadow-[#f4da9d]/10' : 'border-[#4b2d12]/60 opacity-50'
                                             }`}
                                         >
                                             <div className="flex items-start gap-4">
-                                                <div className={`p-3 rounded-lg ${affordable ? 'bg-gradient-to-br from-blue-500/30 to-orange-500/30' : 'bg-slate-700/50'}`}>
-                                                    <Icon size={24} className={affordable ? 'text-orange-400' : 'text-gray-500'} />
+                                                <div className={`p-3 rounded-lg ${affordable ? 'bg-gradient-to-br from-[#8b5a23]/40 to-[#f5c26a]/40' : 'bg-[#2d1908]/70'}`}>
+                                                    <Icon size={24} className={affordable ? 'text-[#f5c26a]' : 'text-gray-500'} />
                                                 </div>
-                                                
+
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-start justify-between gap-2 mb-1">
-                                                        <h3 className="font-bold text-white">{upgrade.name}</h3>
-                                                        <div className={`text-sm font-bold whitespace-nowrap ${affordable ? 'text-orange-400' : 'text-gray-500'}`}>
+                                                        <h3 className="font-bold text-[#ffe9bb]">{upgrade.name}</h3>
+                                                        <div className={`text-sm font-bold whitespace-nowrap ${affordable ? 'text-[#f7c869]' : 'text-gray-500'}`}>
                                                             {formatMoney(cost)}
                                                         </div>
                                                     </div>
-                                                    
-                                                    <p className="text-sm text-blue-300 mb-2">{upgrade.description}</p>
-                                                    
+
+                                                    <p className="text-sm text-amber-200/80 mb-2">{upgrade.description}</p>
+
                                                     <div className="flex items-center justify-between">
-                                                        <div className="text-xs text-gray-400">
-                                                            Owned: <span className="text-white font-semibold">{upgrade.owned}</span>
+                                                        <div className="text-xs text-amber-200/60">
+                                                            Owned: <span className="text-[#fff1d4] font-semibold">{upgrade.owned}</span>
                                                         </div>
                                                         {upgrade.owned > 0 && (
-                                                            <div className="text-xs text-orange-400 font-semibold">
-                                                                {upgrade.perSecond > 0 
+                                                            <div className="text-xs text-[#f7c869] font-semibold">
+                                                                {upgrade.perSecond > 0
                                                                     ? `+${formatMoney(upgrade.perSecond * upgrade.owned)}/sec`
                                                                     : `+${formatMoney(upgrade.clickBonus * upgrade.owned)}/sale`
                                                                 }
@@ -434,10 +550,10 @@
 
                             {/* Achievement */}
                             {totalEarned >= 1000000 && (
-                                <div className="mt-6 bg-gradient-to-r from-orange-500/20 to-blue-600/20 border-2 border-orange-500/50 rounded-xl p-6 text-center backdrop-blur-sm">
+                                <div className="mt-6 bg-gradient-to-r from-[#b97a2e]/20 to-[#f7c869]/20 border-2 border-[#f3c96a]/50 rounded-xl p-6 text-center backdrop-blur-sm">
                                     <div className="text-4xl mb-2">🏆</div>
-                                    <h3 className="text-2xl font-bold text-orange-400 mb-1">Card Mogul!</h3>
-                                    <p className="text-blue-200">You've earned over $1,000,000 in card sales!</p>
+                                    <h3 className="text-2xl font-bold text-[#f7c869] mb-1">Card Mogul!</h3>
+                                    <p className="text-amber-200">You've earned over $1,000,000 in card sales!</p>
                                 </div>
                             )}
                         </div>
