@@ -115,7 +115,7 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Playfair+Display:wght@700;900&display=swap');
@@ -124,55 +124,84 @@
             font-family: 'Inter', sans-serif;
         }
 
+        /* Smooth transitions for all interactive elements */
+        * {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
         /* Custom Scrollbar - Dark Mode */
         ::-webkit-scrollbar {
-            width: 10px;
-            height: 10px;
+            width: 12px;
+            height: 12px;
         }
 
         .dark ::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
         }
 
         .dark ::-webkit-scrollbar-thumb {
-            background: #D4A574;
-            border-radius: 10px;
-            border: 2px solid rgba(0, 0, 0, 0.5);
+            background: linear-gradient(180deg, #D4A574 0%, #C2A882 100%);
+            border-radius: 12px;
+            border: 3px solid rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
 
         .dark ::-webkit-scrollbar-thumb:hover {
-            background: #E0B685;
+            background: linear-gradient(180deg, #E0B685 0%, #D4A574 100%);
+            border: 3px solid rgba(0, 0, 0, 0.5);
         }
 
         /* Custom Scrollbar - Light Mode */
         .light ::-webkit-scrollbar-track {
-            background: rgba(245, 235, 220, 0.8);
-            border-radius: 10px;
+            background: rgba(245, 235, 220, 0.5);
+            border-radius: 12px;
         }
 
         .light ::-webkit-scrollbar-thumb {
-            background: #8B7355;
-            border-radius: 10px;
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: linear-gradient(180deg, #D4A574 0%, #8B7355 100%);
+            border-radius: 12px;
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
         }
 
         .light ::-webkit-scrollbar-thumb:hover {
-            background: #6B5745;
+            background: linear-gradient(180deg, #E0B685 0%, #A08568 100%);
+            border: 3px solid rgba(255, 255, 255, 0.7);
         }
 
         /* Card corner decorations */
         .card-corner {
             position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .card-corner::before,
         .card-corner::after {
             content: '';
             position: absolute;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border: 2px solid currentColor;
+            opacity: 0.6;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-corner:hover::before,
+        .card-corner:hover::after {
+            opacity: 1;
         }
 
         .card-corner::before {
@@ -180,6 +209,7 @@
             left: -2px;
             border-right: none;
             border-bottom: none;
+            border-top-left-radius: 4px;
         }
 
         .card-corner::after {
@@ -187,6 +217,7 @@
             right: -2px;
             border-left: none;
             border-top: none;
+            border-bottom-right-radius: 4px;
         }
 
         /* Card texture pattern */
@@ -199,6 +230,30 @@
                     rgba(212, 165, 116, 0.03) 10px,
                     rgba(212, 165, 116, 0.03) 20px
                 );
+        }
+
+        /* Smooth backdrop for modals */
+        .smooth-backdrop {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        /* Smooth shadows */
+        .smooth-shadow {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .smooth-shadow-lg {
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Smooth border radius */
+        .smooth-rounded {
+            border-radius: 20px;
+        }
+
+        .smooth-rounded-lg {
+            border-radius: 24px;
         }
     </style>
 </head>
@@ -343,21 +398,6 @@
             </svg>
         );
 
-        const Save = ({ size = 24, className = "" }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
-        );
-
-        const Upload = ({ size = 24, className = "" }) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
-        );
 
         const RefreshCw = ({ size = 24, className = "" }) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -413,8 +453,6 @@
             const [volume, setVolume] = useState(50);
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-            const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
-            const [lastSaveTime, setLastSaveTime] = useState(null);
 
             // Sound effects using Web Audio API
             const playSound = (frequency, duration, type = 'sine') => {
@@ -464,77 +502,6 @@
                 setTheme(prev => prev === 'dark' ? 'light' : 'dark');
             };
 
-            // Save/Load functionality
-            const saveGame = () => {
-                const saveData = {
-                    cash,
-                    totalEarned,
-                    totalClicks,
-                    portfolio: portfolio.map(u => ({ id: u.id, owned: u.owned })),
-                    unlockedAchievements,
-                    theme,
-                    volume,
-                    soundEnabled,
-                    notificationsEnabled,
-                    autoSaveEnabled,
-                    gradingCooldown,
-                    totalGradingGames,
-                    perfectGrades,
-                    timestamp: Date.now()
-                };
-
-                try {
-                    localStorage.setItem('cardFindzSave', JSON.stringify(saveData));
-                    setLastSaveTime(new Date().toLocaleTimeString());
-                    setMessage('✓ Game saved successfully!');
-                    playSuccessSound();
-                    return true;
-                } catch (error) {
-                    setMessage('✗ Failed to save game!');
-                    playFailSound();
-                    return false;
-                }
-            };
-
-            const loadGame = () => {
-                try {
-                    const saveData = localStorage.getItem('cardFindzSave');
-                    if (!saveData) {
-                        setMessage('No save data found!');
-                        return false;
-                    }
-
-                    const data = JSON.parse(saveData);
-                    setCash(data.cash || 0);
-                    setTotalEarned(data.totalEarned || 0);
-                    setTotalClicks(data.totalClicks || 0);
-                    setUnlockedAchievements(data.unlockedAchievements || []);
-                    setTheme(data.theme || 'dark');
-                    setVolume(data.volume !== undefined ? data.volume : 50);
-                    setSoundEnabled(data.soundEnabled !== undefined ? data.soundEnabled : true);
-                    setNotificationsEnabled(data.notificationsEnabled !== undefined ? data.notificationsEnabled : true);
-                    setAutoSaveEnabled(data.autoSaveEnabled !== undefined ? data.autoSaveEnabled : true);
-                    setGradingCooldown(data.gradingCooldown || 0);
-                    setTotalGradingGames(data.totalGradingGames || 0);
-                    setPerfectGrades(data.perfectGrades || 0);
-
-                    if (data.portfolio) {
-                        setPortfolio(prev => prev.map(upgrade => {
-                            const saved = data.portfolio.find(p => p.id === upgrade.id);
-                            return saved ? { ...upgrade, owned: saved.owned } : upgrade;
-                        }));
-                    }
-
-                    const savedTime = new Date(data.timestamp).toLocaleString();
-                    setMessage(`✓ Game loaded from ${savedTime}`);
-                    playSuccessSound();
-                    return true;
-                } catch (error) {
-                    setMessage('✗ Failed to load game!');
-                    playFailSound();
-                    return false;
-                }
-            };
 
             const resetGame = () => {
                 if (!confirm('Are you sure you want to reset all progress? This cannot be undone!')) {
@@ -549,27 +516,10 @@
                 setTotalGradingGames(0);
                 setPerfectGrades(0);
                 setPortfolio(upgrades.map(inv => ({ ...inv })));
-                localStorage.removeItem('cardFindzSave');
                 setMessage('Game reset complete!');
                 setShowSettings(false);
                 playSuccessSound();
             };
-
-            // Load game on mount
-            useEffect(() => {
-                loadGame();
-            }, []);
-
-            // Auto-save every 30 seconds
-            useEffect(() => {
-                if (!autoSaveEnabled) return;
-
-                const autoSaveInterval = setInterval(() => {
-                    saveGame();
-                }, 30000);
-
-                return () => clearInterval(autoSaveInterval);
-            }, [autoSaveEnabled, cash, totalEarned, totalClicks, portfolio, unlockedAchievements, theme, volume, soundEnabled, notificationsEnabled, gradingCooldown, totalGradingGames, perfectGrades]);
 
             // Card grading mini-game functions
             const cardConditions = {
@@ -1144,11 +1094,11 @@
                 <div className={`min-h-screen ${theme}`} style={{ backgroundColor: currentColors.bg, color: currentColors.text }}>
                     {/* Card Grading Mini-Game Modal */}
                     {showGradingGame && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}>
-                            <div className="card-corner border-2 rounded-2xl p-8 max-w-2xl w-full shadow-2xl animate-bounce" style={{
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 smooth-backdrop" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
+                            <div className="card-corner border-2 smooth-rounded-lg p-8 max-w-2xl w-full smooth-shadow-lg" style={{
                                 backgroundColor: currentColors.bg,
                                 borderColor: currentColors.accent,
-                                boxShadow: `0 0 50px ${currentColors.accent}60`,
+                                boxShadow: `0 20px 80px ${currentColors.accent}40, 0 0 40px ${currentColors.accent}20`,
                                 animation: 'none'
                             }}>
                                 <div className="flex items-center justify-between mb-6">
@@ -1172,7 +1122,7 @@
                                 {!gameResult ? (
                                     <>
                                         {/* Card Display */}
-                                        <div className="card-corner border-2 rounded-xl p-6 mb-6" style={{
+                                        <div className="card-corner border-2 smooth-rounded p-6 mb-6" style={{
                                             backgroundColor: currentColors.bgSecondary,
                                             borderColor: currentColors.accent
                                         }}>
@@ -1251,7 +1201,7 @@
                                         <button
                                             onClick={submitGrade}
                                             disabled={!selectedGrade}
-                                            className={`w-full py-4 rounded-xl font-bold text-xl transition-all ${
+                                            className={`w-full py-4 smooth-rounded font-bold text-xl transition-all ${
                                                 !selectedGrade ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
                                             }`}
                                             style={{
@@ -1277,7 +1227,7 @@
                                             </div>
                                         </div>
 
-                                        <div className="card-corner border-2 rounded-xl p-6 mb-6" style={{
+                                        <div className="card-corner border-2 smooth-rounded p-6 mb-6" style={{
                                             backgroundColor: currentColors.bgSecondary,
                                             borderColor: currentColors.accent
                                         }}>
@@ -1314,7 +1264,7 @@
 
                                         <button
                                             onClick={closeGradingGame}
-                                            className="w-full py-4 rounded-xl font-bold text-xl hover:scale-105 transition-all"
+                                            className="w-full py-4 smooth-rounded font-bold text-xl hover:scale-105 transition-all"
                                             style={{
                                                 backgroundColor: currentColors.accent,
                                                 color: theme === 'dark' ? '#000' : '#fff',
@@ -1331,11 +1281,11 @@
 
                     {/* Settings Modal */}
                     {showSettings && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0, 0, 0, 0.85)' }}>
-                            <div className="card-corner border-2 rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto" style={{
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 smooth-backdrop" style={{ backgroundColor: 'rgba(0, 0, 0, 0.75)' }}>
+                            <div className="card-corner border-2 smooth-rounded-lg p-8 max-w-2xl w-full smooth-shadow-lg max-h-[90vh] overflow-y-auto" style={{
                                 backgroundColor: currentColors.bg,
                                 borderColor: currentColors.accent,
-                                boxShadow: `0 0 50px ${currentColors.accent}60`
+                                boxShadow: `0 20px 80px ${currentColors.accent}40, 0 0 40px ${currentColors.accent}20`
                             }}>
                                 <div className="flex items-center justify-between mb-6">
                                     <h2 className="text-3xl font-bold flex items-center gap-3">
@@ -1356,76 +1306,8 @@
                                 </div>
 
                                 <div className="space-y-6">
-                                    {/* Save/Load Section */}
-                                    <div className="card-corner border rounded-xl p-5" style={{
-                                        backgroundColor: currentColors.bgSecondary,
-                                        borderColor: currentColors.accent
-                                    }}>
-                                        <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: currentColors.text }}>
-                                            <Save size={24} style={{ color: currentColors.accent }} />
-                                            Save & Load
-                                        </h3>
-
-                                        <div className="space-y-3">
-                                            <div className="flex items-center justify-between p-3 rounded-lg" style={{
-                                                backgroundColor: currentColors.bgTertiary,
-                                                border: `1px solid ${currentColors.borderLight}`
-                                            }}>
-                                                <div>
-                                                    <div className="font-bold text-sm" style={{ color: currentColors.text }}>Auto-Save</div>
-                                                    <div className="text-xs" style={{ color: currentColors.textSecondary }}>Saves every 30 seconds</div>
-                                                    {lastSaveTime && (
-                                                        <div className="text-xs mt-1" style={{ color: currentColors.accent }}>
-                                                            Last saved: {lastSaveTime}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <button
-                                                    onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-                                                    className={`px-4 py-2 rounded-lg font-bold transition-all ${
-                                                        autoSaveEnabled ? 'scale-100' : 'opacity-50'
-                                                    }`}
-                                                    style={{
-                                                        backgroundColor: autoSaveEnabled ? currentColors.accent : currentColors.bgTertiary,
-                                                        color: autoSaveEnabled && theme === 'dark' ? '#000' : currentColors.text,
-                                                        border: `2px solid ${currentColors.accent}`
-                                                    }}
-                                                >
-                                                    {autoSaveEnabled ? 'ON' : 'OFF'}
-                                                </button>
-                                            </div>
-
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <button
-                                                    onClick={saveGame}
-                                                    className="flex items-center justify-center gap-2 p-3 rounded-lg font-bold hover:scale-105 transition-all"
-                                                    style={{
-                                                        backgroundColor: currentColors.accent,
-                                                        color: theme === 'dark' ? '#000' : '#fff',
-                                                        boxShadow: `0 5px 20px ${currentColors.accent}40`
-                                                    }}
-                                                >
-                                                    <Save size={20} />
-                                                    Save Now
-                                                </button>
-                                                <button
-                                                    onClick={loadGame}
-                                                    className="flex items-center justify-center gap-2 p-3 rounded-lg font-bold hover:scale-105 transition-all"
-                                                    style={{
-                                                        backgroundColor: currentColors.bgTertiary,
-                                                        color: currentColors.text,
-                                                        border: `2px solid ${currentColors.accent}`
-                                                    }}
-                                                >
-                                                    <Upload size={20} />
-                                                    Load Game
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
                                     {/* Audio Section */}
-                                    <div className="card-corner border rounded-xl p-5" style={{
+                                    <div className="card-corner border smooth-rounded p-5" style={{
                                         backgroundColor: currentColors.bgSecondary,
                                         borderColor: currentColors.accent
                                     }}>
@@ -1493,7 +1375,7 @@
                                     </div>
 
                                     {/* Notifications Section */}
-                                    <div className="card-corner border rounded-xl p-5" style={{
+                                    <div className="card-corner border smooth-rounded p-5" style={{
                                         backgroundColor: currentColors.bgSecondary,
                                         borderColor: currentColors.accent
                                     }}>
@@ -1527,7 +1409,7 @@
                                     </div>
 
                                     {/* Game Info Section */}
-                                    <div className="card-corner border rounded-xl p-5" style={{
+                                    <div className="card-corner border smooth-rounded p-5" style={{
                                         backgroundColor: currentColors.bgSecondary,
                                         borderColor: currentColors.accent
                                     }}>
@@ -1568,7 +1450,7 @@
                                     </div>
 
                                     {/* Danger Zone */}
-                                    <div className="card-corner border-2 rounded-xl p-5" style={{
+                                    <div className="card-corner border-2 smooth-rounded p-5" style={{
                                         backgroundColor: currentColors.bgSecondary,
                                         borderColor: '#ef4444'
                                     }}>
@@ -1597,7 +1479,7 @@
                                     {/* Close Button */}
                                     <button
                                         onClick={() => setShowSettings(false)}
-                                        className="w-full py-3 rounded-xl font-bold hover:scale-105 transition-all"
+                                        className="w-full py-3 smooth-rounded font-bold hover:scale-105 transition-all"
                                         style={{
                                             backgroundColor: currentColors.accent,
                                             color: theme === 'dark' ? '#000' : '#fff',
@@ -1614,13 +1496,13 @@
                     {/* Achievement Notification */}
                     {achievementNotification && notificationsEnabled && (
                         <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 animate-bounce">
-                            <div className="card-corner border-2 rounded-xl p-6 shadow-2xl min-w-[320px]" style={{
+                            <div className="card-corner border-2 smooth-rounded p-6 smooth-shadow-lg min-w-[320px]" style={{
                                 backgroundColor: currentColors.bgSecondary,
                                 borderColor: currentColors.accent,
                                 boxShadow: `0 0 30px ${currentColors.accent}40`
                             }}>
                                 <div className="text-center">
-                                    <div className="text-5xl mb-2 drop-shadow-lg">{achievementNotification.icon}</div>
+                                    <div className="text-5xl mb-2 drop-smooth-shadow">{achievementNotification.icon}</div>
                                     <div className="text-sm font-bold uppercase tracking-wide mb-1" style={{ color: currentColors.accent }}>Achievement Unlocked!</div>
                                     <h3 className="text-2xl font-extrabold mb-1 drop-shadow-md" style={{ color: currentColors.text }}>{achievementNotification.name}</h3>
                                     <p className="text-sm" style={{ color: currentColors.textSecondary }}>{achievementNotification.description}</p>
@@ -1633,7 +1515,7 @@
                     <div className="sticky top-0 z-10 border-b" style={{ backgroundColor: currentColors.bg, borderColor: currentColors.borderLight }}>
                         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="card-corner w-12 h-12 rounded-lg flex items-center justify-center shadow-lg" style={{ backgroundColor: currentColors.accent, color: currentColors.text }}>
+                                <div className="card-corner w-12 h-12 rounded-lg flex items-center justify-center smooth-shadow" style={{ backgroundColor: currentColors.accent, color: currentColors.text }}>
                                     <CreditCard size={28} className={theme === 'dark' ? 'text-black' : 'text-white'} strokeWidth={2.5} />
                                 </div>
                                 <div>
@@ -1686,7 +1568,7 @@
                             <div className="w-full max-w-md space-y-6">
                                 {/* Stats */}
                                 <div className="space-y-3">
-                                    <div className="card-corner card-texture border rounded-xl p-6 shadow-lg" style={{
+                                    <div className="card-corner card-texture border smooth-rounded p-6 smooth-shadow" style={{
                                         backgroundColor: currentColors.bgSecondary,
                                         borderColor: currentColors.accent
                                     }}>
@@ -1695,7 +1577,7 @@
                                     </div>
 
                                     {/* Leaderboard Rank */}
-                                    <div className="card-corner border rounded-xl p-4 shadow-lg" style={{
+                                    <div className="card-corner border smooth-rounded p-4 smooth-shadow" style={{
                                         backgroundColor: currentColors.bgSecondary,
                                         borderColor: currentColors.accent
                                     }}>
@@ -1771,7 +1653,7 @@
                                 <div className="relative">
                                     <button
                                         onClick={handleClick}
-                                        className={`card-corner w-full aspect-square active:scale-95 rounded-2xl transition-all duration-100 flex flex-col items-center justify-center gap-4 shadow-2xl ${
+                                        className={`card-corner w-full aspect-square active:scale-95 smooth-rounded-lg transition-all duration-100 flex flex-col items-center justify-center gap-4 smooth-shadow-lg ${
                                             clickAnimation ? 'scale-95' : 'scale-100'
                                         } ${cardFlipAnimation ? 'animate-card-flip' : ''}`}
                                         style={{
@@ -1823,7 +1705,7 @@
                                     <button
                                         onClick={startGradingGame}
                                         disabled={gradingCooldown > 0}
-                                        className={`card-corner w-full rounded-xl transition-all duration-200 flex items-center justify-center gap-3 shadow-lg py-4 ${
+                                        className={`card-corner w-full smooth-rounded transition-all duration-200 flex items-center justify-center gap-3 smooth-shadow py-4 ${
                                             gradingCooldown > 0 ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
                                         }`}
                                         style={{
@@ -1962,7 +1844,7 @@
                             </div>
 
                             {/* Achievements */}
-                            <div className="card-corner border rounded-xl p-6 shadow-lg" style={{
+                            <div className="card-corner border smooth-rounded p-6 smooth-shadow" style={{
                                 backgroundColor: currentColors.bgSecondary,
                                 borderColor: currentColors.accent
                             }}>
@@ -1973,7 +1855,7 @@
                                             {unlockedAchievements.length} / {achievements.length} Unlocked
                                         </p>
                                     </div>
-                                    <div className="text-4xl drop-shadow-lg">🏆</div>
+                                    <div className="text-4xl drop-smooth-shadow">🏆</div>
                                 </div>
 
                                 <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
@@ -1991,7 +1873,7 @@
                                                 }}
                                             >
                                                 <div className="flex items-start gap-3">
-                                                    <div className={`text-3xl drop-shadow-lg ${isUnlocked ? '' : 'grayscale opacity-40'}`}>
+                                                    <div className={`text-3xl drop-smooth-shadow ${isUnlocked ? '' : 'grayscale opacity-40'}`}>
                                                         {achievement.icon}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
@@ -2007,7 +1889,7 @@
                                                         </p>
                                                     </div>
                                                     {isUnlocked && (
-                                                        <div className="text-xl drop-shadow-lg" style={{ color: currentColors.accent }}>✓</div>
+                                                        <div className="text-xl drop-smooth-shadow" style={{ color: currentColors.accent }}>✓</div>
                                                     )}
                                                 </div>
                                             </div>
@@ -2017,7 +1899,7 @@
                             </div>
 
                             {/* Leaderboard */}
-                            <div className="card-corner border rounded-xl p-6 shadow-lg mt-6" style={{
+                            <div className="card-corner border smooth-rounded p-6 smooth-shadow mt-6" style={{
                                 backgroundColor: currentColors.bgSecondary,
                                 borderColor: currentColors.accent
                             }}>
@@ -2028,7 +1910,7 @@
                                             Your Rank: #{playerRank} / {leaderboardData.length + 1}
                                         </p>
                                     </div>
-                                    <div className="text-4xl drop-shadow-lg">
+                                    <div className="text-4xl drop-smooth-shadow">
                                         <Trophy size={32} style={{ color: currentColors.accent }} />
                                     </div>
                                 </div>
@@ -2054,7 +1936,7 @@
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center gap-3">
-                                                        <div className="text-2xl drop-shadow-lg w-8 text-center">
+                                                        <div className="text-2xl drop-smooth-shadow w-8 text-center">
                                                             {medals[index]}
                                                         </div>
                                                         <div>
