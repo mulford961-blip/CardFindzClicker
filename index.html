@@ -391,12 +391,23 @@
             const [gradingCooldown, setGradingCooldown] = useState(0);
             const [totalGradingGames, setTotalGradingGames] = useState(0);
             const [perfectGrades, setPerfectGrades] = useState(0);
+            const [perfectStreak, setPerfectStreak] = useState(0);
+            const [bestPerfectStreak, setBestPerfectStreak] = useState(0);
 
             // Settings states
             const [showSettings, setShowSettings] = useState(false);
             const [volume, setVolume] = useState(50);
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+            const [lastSavedAt, setLastSavedAt] = useState(null);
+            const [comboCount, setComboCount] = useState(0);
+            const [comboMultiplier, setComboMultiplier] = useState(1);
+            const [lastClickTime, setLastClickTime] = useState(null);
+            const [dailyGoals, setDailyGoals] = useState([]);
+            const [goalDate, setGoalDate] = useState(new Date().toDateString());
+            const [packReward, setPackReward] = useState(null);
+            const [activeBoost, setActiveBoost] = useState(null);
+            const [boostTimeLeft, setBoostTimeLeft] = useState(0);
 
             // Sound effects using Web Audio API
             const playSound = (frequency, duration, type = 'sine') => {
@@ -458,10 +469,139 @@
                 setGradingCooldown(0);
                 setTotalGradingGames(0);
                 setPerfectGrades(0);
+                setPerfectStreak(0);
+                setBestPerfectStreak(0);
+                setLastSavedAt(null);
                 setPortfolio(upgrades.map(inv => ({ ...inv })));
                 setMessage('Game reset complete!');
                 setShowSettings(false);
                 playSuccessSound();
+            };
+
+            const createDailyGoals = () => ([
+                {
+                    id: 'clicks',
+                    type: 'clicks',
+                    target: 200,
+                    progress: 0,
+                    reward: 750,
+                    description: 'Make 200 card sales today',
+                    claimed: false
+                },
+                {
+                    id: 'earnings',
+                    type: 'earnings',
+                    target: 15000,
+                    progress: 0,
+                    reward: 2500,
+                    description: 'Earn $15,000 from any source',
+                    claimed: false
+                },
+                {
+                    id: 'grading',
+                    type: 'grading',
+                    target: 2,
+                    progress: 0,
+                    reward: 5000,
+                    description: 'Finish 2 grading challenges',
+                    claimed: false
+                },
+                {
+                    id: 'packs',
+                    type: 'packs',
+                    target: 3,
+                    progress: 0,
+                    reward: 3000,
+                    description: 'Crack open 3 mystery packs',
+                    claimed: false
+                }
+            ]);
+
+            const updateDailyGoals = (type, amount = 1) => {
+                setDailyGoals(prevGoals => prevGoals.map(goal => {
+                    if (goal.type !== type || goal.claimed) return goal;
+
+                    const newProgress = Math.min(goal.target, goal.progress + amount);
+                    return {
+                        ...goal,
+                        progress: newProgress
+                    };
+                }));
+            };
+
+            const claimGoalReward = (goalId) => {
+                setDailyGoals(prevGoals => prevGoals.map(goal => {
+                    if (goal.id !== goalId || goal.claimed || goal.progress < goal.target) return goal;
+                    setCash(prev => prev + goal.reward);
+                    setTotalEarned(prev => prev + goal.reward);
+                    setMessage(`Collected ${formatMoney(goal.reward)} from daily goals!`);
+                    playSuccessSound();
+                    return { ...goal, claimed: true };
+                }));
+            };
+
+            const triggerMarketBoost = (label, clickMultiplier = 1, autoMultiplier = 1, durationMs = 30000) => {
+                const expiresAt = Date.now() + durationMs;
+                setActiveBoost({ label, clickMultiplier, autoMultiplier, expiresAt });
+            };
+
+            const openCardPack = () => {
+                const packCost = 500;
+                if (cash < packCost) {
+                    setMessage('Not enough cash to buy a pack!');
+                    return;
+                }
+
+                const rolls = [
+                    {
+                        label: 'Heat Check! +$1,250 payout',
+                        cashReward: 1250,
+                        clickMultiplier: 1,
+                        autoMultiplier: 1
+                    },
+                    {
+                        label: 'Market Rush! 2x clicks for 30s',
+                        cashReward: 0,
+                        clickMultiplier: 2,
+                        autoMultiplier: 1
+                    },
+                    {
+                        label: 'Passive Boom! 2x auto for 45s',
+                        cashReward: 0,
+                        clickMultiplier: 1,
+                        autoMultiplier: 2,
+                        duration: 45000
+                    },
+                    {
+                        label: 'Jackpot! +$5,000 instant cash',
+                        cashReward: 5000,
+                        clickMultiplier: 1,
+                        autoMultiplier: 1
+                    },
+                    {
+                        label: 'Hobby High! 1.5x everything for 20s',
+                        cashReward: 0,
+                        clickMultiplier: 1.5,
+                        autoMultiplier: 1.5,
+                        duration: 20000
+                    }
+                ];
+
+                setCash(prev => prev - packCost);
+                const roll = rolls[Math.floor(Math.random() * rolls.length)];
+                if (roll.cashReward) {
+                    setCash(prev => prev + roll.cashReward);
+                    setTotalEarned(prev => prev + roll.cashReward);
+                    setPackReward(`Pulled a hot hit! ${formatMoney(roll.cashReward)} added.`);
+                    setMessage('Big pull from the pack!');
+                } else {
+                    const duration = roll.duration ?? 30000;
+                    triggerMarketBoost(roll.label, roll.clickMultiplier, roll.autoMultiplier, duration);
+                    setPackReward(`${roll.label} activated!`);
+                    setMessage('Market is going wild!');
+                }
+
+                updateDailyGoals('packs', 1);
             };
 
             // Card grading mini-game functions
@@ -513,32 +653,49 @@
                 let reward = 0;
                 let message = '';
                 let isSuccess = false;
+                let streakBonus = 0;
+                let newStreak = perfectStreak;
 
                 if (difference === 0) {
                     reward = Math.floor(clickValue * 10);
-                    message = 'Perfect! Exact match!';
+                    newStreak = perfectStreak + 1;
+                    streakBonus = Math.floor(clickValue * Math.max(1, newStreak * 0.5));
+                    reward += streakBonus;
+                    message = newStreak > 1 ? `Perfect! ${newStreak}x streak!` : 'Perfect! Exact match!';
                     isSuccess = true;
                     setPerfectGrades(prev => prev + 1);
+                    setPerfectStreak(newStreak);
+                    setBestPerfectStreak(prev => Math.max(prev, newStreak));
                     playSuccessSound();
                 } else if (difference === 1) {
                     reward = Math.floor(clickValue * 5);
                     message = 'Great! Within 1 grade!';
                     isSuccess = true;
                     playSuccessSound();
+                    newStreak = 0;
+                    setPerfectStreak(0);
                 } else if (difference === 2) {
                     reward = Math.floor(clickValue * 2);
                     message = 'Good! Within 2 grades!';
                     isSuccess = true;
                     playSuccessSound();
+                    newStreak = 0;
+                    setPerfectStreak(0);
                 } else {
                     reward = 0;
                     message = 'Too far off. No bonus.';
                     playFailSound();
+                    newStreak = 0;
+                    setPerfectStreak(0);
                 }
 
                 setCash(prev => prev + reward);
                 setTotalEarned(prev => prev + reward);
                 setTotalGradingGames(prev => prev + 1);
+                updateDailyGoals('grading', 1);
+                if (reward > 0) {
+                    updateDailyGoals('earnings', reward);
+                }
 
                 setGameResult({
                     correct: currentCard.grade,
@@ -546,7 +703,9 @@
                     difference,
                     reward,
                     message,
-                    isSuccess
+                    isSuccess,
+                    streakBonus,
+                    streak: newStreak
                 });
 
                 // Start cooldown
@@ -805,6 +964,54 @@
 
             const [portfolio, setPortfolio] = useState(upgrades.map(inv => ({ ...inv })));
 
+            // Load saved progress
+            useEffect(() => {
+                const savedData = localStorage.getItem('cardfindz-save');
+                if (!savedData) return;
+
+                try {
+                    const parsed = JSON.parse(savedData);
+                    setTheme(parsed.theme ?? 'dark');
+                    setCash(parsed.cash ?? 0);
+                    setTotalEarned(parsed.totalEarned ?? 0);
+                    setTotalClicks(parsed.totalClicks ?? 0);
+                    setUnlockedAchievements(parsed.unlockedAchievements ?? []);
+                    setTotalGradingGames(parsed.totalGradingGames ?? 0);
+                    setPerfectGrades(parsed.perfectGrades ?? 0);
+                    setPerfectStreak(parsed.perfectStreak ?? 0);
+                    setBestPerfectStreak(parsed.bestPerfectStreak ?? 0);
+                    setVolume(parsed.volume ?? 50);
+                    setSoundEnabled(parsed.soundEnabled ?? true);
+                    setNotificationsEnabled(parsed.notificationsEnabled ?? true);
+                    setGoalDate(parsed.goalDate ?? new Date().toDateString());
+
+                    if (parsed.portfolio) {
+                        setPortfolio(upgrades.map(inv => {
+                            const savedUpgrade = parsed.portfolio.find(item => item.id === inv.id);
+                            return savedUpgrade ? { ...inv, owned: savedUpgrade.owned ?? inv.owned } : { ...inv };
+                        }));
+                    }
+
+                    const today = new Date().toDateString();
+                    if (parsed.goalDate === today && parsed.dailyGoals) {
+                        setDailyGoals(parsed.dailyGoals);
+                    } else {
+                        setDailyGoals(createDailyGoals());
+                        setGoalDate(today);
+                    }
+
+                    setMessage('Progress loaded!');
+                } catch (error) {
+                    console.error('Failed to load saved progress', error);
+                }
+            }, []);
+
+            useEffect(() => {
+                if (dailyGoals.length === 0) {
+                    setDailyGoals(createDailyGoals());
+                }
+            }, []);
+
             // Fake leaderboard players - spread across different earnings levels
             const generateLeaderboard = () => {
                 const names = [
@@ -916,13 +1123,46 @@
             useEffect(() => {
                 const interval = setInterval(() => {
                     if (cardsPerSecond > 0) {
-                        setCash(prev => prev + cardsPerSecond / 10);
-                        setTotalEarned(prev => prev + cardsPerSecond / 10);
+                        const autoGain = (cardsPerSecond * (activeBoost?.autoMultiplier ?? 1)) / 10;
+                        setCash(prev => prev + autoGain);
+                        setTotalEarned(prev => prev + autoGain);
+                        updateDailyGoals('earnings', autoGain);
                     }
                 }, 100);
 
                 return () => clearInterval(interval);
-            }, [cardsPerSecond]);
+            }, [cardsPerSecond, activeBoost]);
+
+            useEffect(() => {
+                if (!activeBoost) {
+                    setBoostTimeLeft(0);
+                    return;
+                }
+
+                const tick = setInterval(() => {
+                    const remaining = Math.max(0, Math.ceil((activeBoost.expiresAt - Date.now()) / 1000));
+                    setBoostTimeLeft(remaining);
+
+                    if (remaining <= 0) {
+                        setActiveBoost(null);
+                    }
+                }, 500);
+
+                return () => clearInterval(tick);
+            }, [activeBoost]);
+
+            useEffect(() => {
+                const decayTimer = setInterval(() => {
+                    if (!lastClickTime) return;
+                    const idleTime = Date.now() - lastClickTime;
+                    if (idleTime > 2000 && comboMultiplier > 1) {
+                        setComboMultiplier(prev => Math.max(1, Math.round((prev - 0.05) * 100) / 100));
+                        setComboCount(prev => Math.max(0, prev - 1));
+                    }
+                }, 600);
+
+                return () => clearInterval(decayTimer);
+            }, [lastClickTime, comboMultiplier]);
 
             // Check for achievements
             useEffect(() => {
@@ -934,6 +1174,34 @@
                     }
                 });
             }, [totalClicks, totalEarned, portfolio, cardsPerSecond, unlockedAchievements]);
+
+            // Autosave progress
+            useEffect(() => {
+                const saveData = {
+                    theme,
+                    cash,
+                    totalEarned,
+                    totalClicks,
+                    portfolio: portfolio.map(({ id, owned }) => ({ id, owned })),
+                    unlockedAchievements,
+                    totalGradingGames,
+                    perfectGrades,
+                    perfectStreak,
+                    bestPerfectStreak,
+                    volume,
+                    soundEnabled,
+                    notificationsEnabled,
+                    dailyGoals,
+                    goalDate
+                };
+
+                try {
+                    localStorage.setItem('cardfindz-save', JSON.stringify(saveData));
+                    setLastSavedAt(new Date().toISOString());
+                } catch (error) {
+                    console.error('Failed to save progress', error);
+                }
+            }, [theme, cash, totalEarned, totalClicks, portfolio, unlockedAchievements, totalGradingGames, perfectGrades, perfectStreak, bestPerfectStreak, volume, soundEnabled, notificationsEnabled, dailyGoals, goalDate]);
 
             // Calculate player rank on leaderboard
             useEffect(() => {
@@ -953,9 +1221,22 @@
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
-                setCash(prev => prev + clickValue);
-                setTotalEarned(prev => prev + clickValue);
+                const now = Date.now();
+                const withinCombo = lastClickTime && now - lastClickTime < 1500;
+                const newComboCount = withinCombo ? comboCount + 1 : 1;
+                const newComboMultiplier = Math.min(5, 1 + newComboCount * 0.02);
+
+                setComboCount(newComboCount);
+                setComboMultiplier(parseFloat(newComboMultiplier.toFixed(2)));
+                setLastClickTime(now);
+
+                const effectiveClick = Math.floor(clickValue * newComboMultiplier * (activeBoost?.clickMultiplier ?? 1));
+
+                setCash(prev => prev + effectiveClick);
+                setTotalEarned(prev => prev + effectiveClick);
                 setTotalClicks(prev => prev + 1);
+                updateDailyGoals('clicks', 1);
+                updateDailyGoals('earnings', effectiveClick);
                 setClickAnimation(true);
                 setCardFlipAnimation(true);
 
@@ -967,7 +1248,7 @@
 
                 // Add floating number
                 const id = Date.now();
-                setFloatingNumbers(prev => [...prev, { id, value: clickValue, x, y }]);
+                setFloatingNumbers(prev => [...prev, { id, value: effectiveClick, x, y }]);
                 setTimeout(() => {
                     setFloatingNumbers(prev => prev.filter(n => n.id !== id));
                 }, 1000);
@@ -1197,12 +1478,17 @@
                                                 </div>
                                             </div>
 
-                                            <div className="text-center pt-4 border-t" style={{ borderColor: currentColors.borderLight }}>
-                                                <div className="text-sm mb-1" style={{ color: currentColors.textSecondary }}>Bonus Earned</div>
-                                                <div className="text-3xl font-bold" style={{ color: currentColors.accent }}>
-                                                    {formatMoney(gameResult.reward)}
-                                                </div>
-                                            </div>
+                                              <div className="text-center pt-4 border-t" style={{ borderColor: currentColors.borderLight }}>
+                                                  <div className="text-sm mb-1" style={{ color: currentColors.textSecondary }}>Bonus Earned</div>
+                                                  <div className="text-3xl font-bold" style={{ color: currentColors.accent }}>
+                                                      {formatMoney(gameResult.reward)}
+                                                  </div>
+                                                  {gameResult.streakBonus > 0 && (
+                                                      <div className="text-xs mt-2 font-semibold" style={{ color: currentColors.accent }}>
+                                                          Includes {formatMoney(gameResult.streakBonus)} perfect streak bonus (x{gameResult.streak})
+                                                      </div>
+                                                  )}
+                                              </div>
                                         </div>
 
                                         <button
@@ -1590,6 +1876,77 @@
                                             <div className="text-xl font-bold" style={{ color: currentColors.text }}>{totalClicks.toLocaleString()}</div>
                                         </div>
                                     </div>
+
+                                    {/* Momentum + Boosts */}
+                                    <div className="card-corner border rounded-xl p-4 shadow-lg space-y-3" style={{
+                                        backgroundColor: currentColors.bgSecondary,
+                                        borderColor: currentColors.accent
+                                    }}>
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="text-xs uppercase tracking-wide font-semibold" style={{ color: currentColors.textSecondary }}>Momentum Meter</div>
+                                                <div className="text-2xl font-extrabold" style={{ color: currentColors.accent }}>x{comboMultiplier.toFixed(2)}</div>
+                                                <div className="text-xs" style={{ color: currentColors.textSecondary }}>Rapid clicking boosts payout up to 5x</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs" style={{ color: currentColors.textSecondary }}>Streak</div>
+                                                <div className="text-lg font-bold" style={{ color: currentColors.text }}>{comboCount} taps</div>
+                                            </div>
+                                        </div>
+                                        <div className="h-2 rounded-full overflow-hidden" style={{
+                                            backgroundColor: currentColors.bgTertiary,
+                                            border: `1px solid ${currentColors.borderLight}`
+                                        }}>
+                                            <div
+                                                className="h-full transition-all duration-300"
+                                                style={{
+                                                    width: `${Math.min((comboMultiplier / 5) * 100, 100)}%`,
+                                                    backgroundColor: currentColors.accent,
+                                                    boxShadow: `0 0 10px ${currentColors.accent}`
+                                                }}
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3 text-sm">
+                                            <div className="p-3 rounded-lg" style={{
+                                                backgroundColor: currentColors.bgTertiary,
+                                                border: `1px solid ${currentColors.borderLight}`
+                                            }}>
+                                                <div className="font-bold text-xs" style={{ color: currentColors.text }}>Market Boost</div>
+                                                {activeBoost ? (
+                                                    <div style={{ color: currentColors.textSecondary }}>
+                                                        <div className="font-semibold" style={{ color: currentColors.accent }}>{activeBoost.label}</div>
+                                                        <div>{boostTimeLeft}s remaining</div>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ color: currentColors.textSecondary }}>No boost active</div>
+                                                )}
+                                            </div>
+
+                                            <div className="p-3 rounded-lg flex flex-col gap-2" style={{
+                                                backgroundColor: currentColors.bgTertiary,
+                                                border: `1px solid ${currentColors.borderLight}`
+                                            }}>
+                                                <div className="font-bold text-xs" style={{ color: currentColors.text }}>Mystery Pack</div>
+                                                <button
+                                                    onClick={openCardPack}
+                                                    className="text-xs font-bold px-3 py-2 rounded-lg hover:scale-105 transition-all"
+                                                    style={{
+                                                        backgroundColor: currentColors.accent,
+                                                        color: theme === 'dark' ? '#000' : '#fff',
+                                                        boxShadow: `0 4px 15px ${currentColors.accent}50`
+                                                    }}
+                                                >
+                                                    Open for $500
+                                                </button>
+                                                {packReward && (
+                                                    <div className="text-[11px]" style={{ color: currentColors.textSecondary }}>
+                                                        {packReward}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Click Button */}
@@ -1666,13 +2023,86 @@
                                 </div>
 
                                 {/* Message */}
-                                <div className="text-center">
-                                    <div className="text-sm border rounded-lg py-3 px-5 font-medium" style={{
-                                        color: currentColors.textSecondary,
-                                        backgroundColor: currentColors.bgSecondary,
-                                        borderColor: currentColors.borderLight
-                                    }}>
-                                        {message}
+                                  <div className="text-center">
+                                      <div className="text-sm border rounded-lg py-3 px-5 font-medium" style={{
+                                          color: currentColors.textSecondary,
+                                          backgroundColor: currentColors.bgSecondary,
+                                          borderColor: currentColors.borderLight
+                                      }}>
+                                          {message}
+                                      </div>
+                                      <div className="text-xs mt-2" style={{ color: currentColors.textSecondary }}>
+                                          Autosave: {lastSavedAt ? new Date(lastSavedAt).toLocaleTimeString() : 'Preparing first save...'}
+                                      </div>
+                                  </div>
+
+                                {/* Daily Goals */}
+                                <div className="card-corner border rounded-xl p-4 space-y-3" style={{
+                                    backgroundColor: currentColors.bgSecondary,
+                                    borderColor: currentColors.accent
+                                }}>
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <h3 className="text-lg font-bold" style={{ color: currentColors.text }}>Daily Goals</h3>
+                                            <p className="text-xs" style={{ color: currentColors.textSecondary }}>Finish objectives for bonus cash</p>
+                                        </div>
+                                        <div className="text-xs px-3 py-1 rounded-full" style={{
+                                            backgroundColor: currentColors.bgTertiary,
+                                            border: `1px solid ${currentColors.borderLight}`,
+                                            color: currentColors.textSecondary
+                                        }}>
+                                            {goalDate}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+                                        {dailyGoals.map(goal => {
+                                            const progressPct = Math.min((goal.progress / goal.target) * 100, 100);
+                                            const completed = goal.progress >= goal.target;
+                                            return (
+                                                <div key={goal.id} className="border rounded-lg p-3" style={{
+                                                    backgroundColor: currentColors.bgTertiary,
+                                                    borderColor: completed ? currentColors.accent : currentColors.borderLight
+                                                }}>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <div>
+                                                            <div className="font-bold text-sm" style={{ color: currentColors.text }}>{goal.description}</div>
+                                                            <div className="text-[11px]" style={{ color: currentColors.textSecondary }}>
+                                                                Reward: {formatMoney(goal.reward)}
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-xs font-bold" style={{ color: currentColors.accent }}>
+                                                            {goal.progress}/{goal.target}
+                                                        </div>
+                                                    </div>
+                                                    <div className="h-2 rounded-full overflow-hidden mb-2" style={{
+                                                        backgroundColor: currentColors.bgSecondary,
+                                                        border: `1px solid ${currentColors.borderLight}`
+                                                    }}>
+                                                        <div
+                                                            className="h-full transition-all duration-300"
+                                                            style={{
+                                                                width: `${progressPct}%`,
+                                                                backgroundColor: currentColors.accent,
+                                                                boxShadow: completed ? `0 0 8px ${currentColors.accent}` : 'none'
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <button
+                                                        onClick={() => claimGoalReward(goal.id)}
+                                                        disabled={!completed || goal.claimed}
+                                                        className={`w-full text-xs font-bold py-2 rounded-lg transition-all ${completed && !goal.claimed ? 'hover:scale-105' : 'opacity-40 cursor-not-allowed'}`}
+                                                        style={{
+                                                            backgroundColor: completed && !goal.claimed ? currentColors.accent : currentColors.bgSecondary,
+                                                            color: completed && !goal.claimed && theme === 'dark' ? '#000' : currentColors.text,
+                                                            border: `1px solid ${currentColors.accent}`
+                                                        }}
+                                                    >
+                                                        {goal.claimed ? 'Reward claimed' : completed ? 'Claim reward' : 'In progress'}
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
 
@@ -1683,12 +2113,14 @@
                                         borderColor: currentColors.borderLight,
                                         color: currentColors.textSecondary
                                     }}>
-                                        <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Grading Stats</div>
-                                        <div>Games Played: {totalGradingGames}</div>
-                                        <div>Perfect Grades: {perfectGrades}</div>
-                                        <div>Accuracy: {((perfectGrades / totalGradingGames) * 100).toFixed(1)}%</div>
-                                    </div>
-                                )}
+                                      <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Grading Stats</div>
+                                      <div>Games Played: {totalGradingGames}</div>
+                                      <div>Perfect Grades: {perfectGrades}</div>
+                                      <div>Accuracy: {((perfectGrades / totalGradingGames) * 100).toFixed(1)}%</div>
+                                      <div>Current Perfect Streak: {perfectStreak}</div>
+                                      <div>Best Perfect Streak: {bestPerfectStreak}</div>
+                                  </div>
+                              )}
                             </div>
                         </div>
 
