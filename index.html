@@ -391,12 +391,15 @@
             const [gradingCooldown, setGradingCooldown] = useState(0);
             const [totalGradingGames, setTotalGradingGames] = useState(0);
             const [perfectGrades, setPerfectGrades] = useState(0);
+            const [perfectStreak, setPerfectStreak] = useState(0);
+            const [bestPerfectStreak, setBestPerfectStreak] = useState(0);
 
             // Settings states
             const [showSettings, setShowSettings] = useState(false);
             const [volume, setVolume] = useState(50);
             const [soundEnabled, setSoundEnabled] = useState(true);
             const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+            const [lastSavedAt, setLastSavedAt] = useState(null);
 
             // Sound effects using Web Audio API
             const playSound = (frequency, duration, type = 'sine') => {
@@ -458,6 +461,9 @@
                 setGradingCooldown(0);
                 setTotalGradingGames(0);
                 setPerfectGrades(0);
+                setPerfectStreak(0);
+                setBestPerfectStreak(0);
+                setLastSavedAt(null);
                 setPortfolio(upgrades.map(inv => ({ ...inv })));
                 setMessage('Game reset complete!');
                 setShowSettings(false);
@@ -513,27 +519,40 @@
                 let reward = 0;
                 let message = '';
                 let isSuccess = false;
+                let streakBonus = 0;
+                let newStreak = perfectStreak;
 
                 if (difference === 0) {
                     reward = Math.floor(clickValue * 10);
-                    message = 'Perfect! Exact match!';
+                    newStreak = perfectStreak + 1;
+                    streakBonus = Math.floor(clickValue * Math.max(1, newStreak * 0.5));
+                    reward += streakBonus;
+                    message = newStreak > 1 ? `Perfect! ${newStreak}x streak!` : 'Perfect! Exact match!';
                     isSuccess = true;
                     setPerfectGrades(prev => prev + 1);
+                    setPerfectStreak(newStreak);
+                    setBestPerfectStreak(prev => Math.max(prev, newStreak));
                     playSuccessSound();
                 } else if (difference === 1) {
                     reward = Math.floor(clickValue * 5);
                     message = 'Great! Within 1 grade!';
                     isSuccess = true;
                     playSuccessSound();
+                    newStreak = 0;
+                    setPerfectStreak(0);
                 } else if (difference === 2) {
                     reward = Math.floor(clickValue * 2);
                     message = 'Good! Within 2 grades!';
                     isSuccess = true;
                     playSuccessSound();
+                    newStreak = 0;
+                    setPerfectStreak(0);
                 } else {
                     reward = 0;
                     message = 'Too far off. No bonus.';
                     playFailSound();
+                    newStreak = 0;
+                    setPerfectStreak(0);
                 }
 
                 setCash(prev => prev + reward);
@@ -546,7 +565,9 @@
                     difference,
                     reward,
                     message,
-                    isSuccess
+                    isSuccess,
+                    streakBonus,
+                    streak: newStreak
                 });
 
                 // Start cooldown
@@ -805,6 +826,39 @@
 
             const [portfolio, setPortfolio] = useState(upgrades.map(inv => ({ ...inv })));
 
+            // Load saved progress
+            useEffect(() => {
+                const savedData = localStorage.getItem('cardfindz-save');
+                if (!savedData) return;
+
+                try {
+                    const parsed = JSON.parse(savedData);
+                    setTheme(parsed.theme ?? 'dark');
+                    setCash(parsed.cash ?? 0);
+                    setTotalEarned(parsed.totalEarned ?? 0);
+                    setTotalClicks(parsed.totalClicks ?? 0);
+                    setUnlockedAchievements(parsed.unlockedAchievements ?? []);
+                    setTotalGradingGames(parsed.totalGradingGames ?? 0);
+                    setPerfectGrades(parsed.perfectGrades ?? 0);
+                    setPerfectStreak(parsed.perfectStreak ?? 0);
+                    setBestPerfectStreak(parsed.bestPerfectStreak ?? 0);
+                    setVolume(parsed.volume ?? 50);
+                    setSoundEnabled(parsed.soundEnabled ?? true);
+                    setNotificationsEnabled(parsed.notificationsEnabled ?? true);
+
+                    if (parsed.portfolio) {
+                        setPortfolio(upgrades.map(inv => {
+                            const savedUpgrade = parsed.portfolio.find(item => item.id === inv.id);
+                            return savedUpgrade ? { ...inv, owned: savedUpgrade.owned ?? inv.owned } : { ...inv };
+                        }));
+                    }
+
+                    setMessage('Progress loaded!');
+                } catch (error) {
+                    console.error('Failed to load saved progress', error);
+                }
+            }, []);
+
             // Fake leaderboard players - spread across different earnings levels
             const generateLeaderboard = () => {
                 const names = [
@@ -934,6 +988,32 @@
                     }
                 });
             }, [totalClicks, totalEarned, portfolio, cardsPerSecond, unlockedAchievements]);
+
+            // Autosave progress
+            useEffect(() => {
+                const saveData = {
+                    theme,
+                    cash,
+                    totalEarned,
+                    totalClicks,
+                    portfolio: portfolio.map(({ id, owned }) => ({ id, owned })),
+                    unlockedAchievements,
+                    totalGradingGames,
+                    perfectGrades,
+                    perfectStreak,
+                    bestPerfectStreak,
+                    volume,
+                    soundEnabled,
+                    notificationsEnabled
+                };
+
+                try {
+                    localStorage.setItem('cardfindz-save', JSON.stringify(saveData));
+                    setLastSavedAt(new Date().toISOString());
+                } catch (error) {
+                    console.error('Failed to save progress', error);
+                }
+            }, [theme, cash, totalEarned, totalClicks, portfolio, unlockedAchievements, totalGradingGames, perfectGrades, perfectStreak, bestPerfectStreak, volume, soundEnabled, notificationsEnabled]);
 
             // Calculate player rank on leaderboard
             useEffect(() => {
@@ -1197,12 +1277,17 @@
                                                 </div>
                                             </div>
 
-                                            <div className="text-center pt-4 border-t" style={{ borderColor: currentColors.borderLight }}>
-                                                <div className="text-sm mb-1" style={{ color: currentColors.textSecondary }}>Bonus Earned</div>
-                                                <div className="text-3xl font-bold" style={{ color: currentColors.accent }}>
-                                                    {formatMoney(gameResult.reward)}
-                                                </div>
-                                            </div>
+                                              <div className="text-center pt-4 border-t" style={{ borderColor: currentColors.borderLight }}>
+                                                  <div className="text-sm mb-1" style={{ color: currentColors.textSecondary }}>Bonus Earned</div>
+                                                  <div className="text-3xl font-bold" style={{ color: currentColors.accent }}>
+                                                      {formatMoney(gameResult.reward)}
+                                                  </div>
+                                                  {gameResult.streakBonus > 0 && (
+                                                      <div className="text-xs mt-2 font-semibold" style={{ color: currentColors.accent }}>
+                                                          Includes {formatMoney(gameResult.streakBonus)} perfect streak bonus (x{gameResult.streak})
+                                                      </div>
+                                                  )}
+                                              </div>
                                         </div>
 
                                         <button
@@ -1666,15 +1751,18 @@
                                 </div>
 
                                 {/* Message */}
-                                <div className="text-center">
-                                    <div className="text-sm border rounded-lg py-3 px-5 font-medium" style={{
-                                        color: currentColors.textSecondary,
-                                        backgroundColor: currentColors.bgSecondary,
-                                        borderColor: currentColors.borderLight
-                                    }}>
-                                        {message}
-                                    </div>
-                                </div>
+                                  <div className="text-center">
+                                      <div className="text-sm border rounded-lg py-3 px-5 font-medium" style={{
+                                          color: currentColors.textSecondary,
+                                          backgroundColor: currentColors.bgSecondary,
+                                          borderColor: currentColors.borderLight
+                                      }}>
+                                          {message}
+                                      </div>
+                                      <div className="text-xs mt-2" style={{ color: currentColors.textSecondary }}>
+                                          Autosave: {lastSavedAt ? new Date(lastSavedAt).toLocaleTimeString() : 'Preparing first save...'}
+                                      </div>
+                                  </div>
 
                                 {/* Mini-game Stats */}
                                 {totalGradingGames > 0 && (
@@ -1683,12 +1771,14 @@
                                         borderColor: currentColors.borderLight,
                                         color: currentColors.textSecondary
                                     }}>
-                                        <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Grading Stats</div>
-                                        <div>Games Played: {totalGradingGames}</div>
-                                        <div>Perfect Grades: {perfectGrades}</div>
-                                        <div>Accuracy: {((perfectGrades / totalGradingGames) * 100).toFixed(1)}%</div>
-                                    </div>
-                                )}
+                                      <div className="font-bold mb-1" style={{ color: currentColors.accent }}>Grading Stats</div>
+                                      <div>Games Played: {totalGradingGames}</div>
+                                      <div>Perfect Grades: {perfectGrades}</div>
+                                      <div>Accuracy: {((perfectGrades / totalGradingGames) * 100).toFixed(1)}%</div>
+                                      <div>Current Perfect Streak: {perfectStreak}</div>
+                                      <div>Best Perfect Streak: {bestPerfectStreak}</div>
+                                  </div>
+                              )}
                             </div>
                         </div>
 
